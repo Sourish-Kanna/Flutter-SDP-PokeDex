@@ -1,6 +1,6 @@
-# pokemon
+# pokedex_sdp
 
-A new Flutter project.
+SDP Project in Flutter.
 
 ## Getting Started
 

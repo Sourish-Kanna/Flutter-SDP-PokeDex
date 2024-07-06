@@ -1,11 +1,11 @@
 {
-    "name": "pokemon",
-    "short_name": "pokemon",
+    "name": "pokedex_sdp",
+    "short_name": "pokedex_sdp",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "SDP Project in Flutter.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
