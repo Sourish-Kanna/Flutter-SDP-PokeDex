@@ -173,41 +173,6 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                           ],
                         ),
                       ),
-
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            Container(
-                              width: width * 0.3,
-                              child: Text("Pre Form", style: TextStyle(
-                                color: Colors.blueGrey, fontSize: 18,
-                              ),),
-                            ),
-
-                            widget.pokemonDetail['prev_evolution'] != null ?
-                            SizedBox(
-                              width: width * 0.55,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: widget.pokemonDetail['prev_evolution'].length,
-                                itemBuilder: (context, index){
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: Text(widget.pokemonDetail['prev_evolution'][index]['name'], style: TextStyle(
-                                        color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
-                                    ),),
-                                  );
-                                },
-                              ),
-                            ): Text("Just Hatched", style: TextStyle(
-                                color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
-                            )),
-                          ],
-                        ),
-                      ),
-
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
@@ -219,25 +184,6 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                                 color: Colors.blueGrey, fontSize: 18,
                               ),),
                             ),
-
-                            widget.pokemonDetail['next_evolution'] != null ?
-                            SizedBox(
-                              width: width * 0.55,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: widget.pokemonDetail['next_evolution'].length,
-                                itemBuilder: (context, index){
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8.0),
-                                  child: Text(widget.pokemonDetail['next_evolution'][index]['name'], style: TextStyle(
-                                      color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
-                                  ),),
-                                );
-                                },
-                              ),
-                            ): Text("Maxed Out", style: TextStyle(
-                                color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
-                            )),
                           ],
                         ),
                       ),
@@ -251,14 +197,11 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             
               top: height * 0.16,
               left: (width/2)-100,
-              child: Hero(
-                tag: widget.heroTag,
-                child: CachedNetworkImage(
-                            imageUrl: widget.pokemonDetail['img'],
-                  height: 250,
-                  fit: BoxFit.fitHeight,
-                          ),
-              ))
+              child: CachedNetworkImage(
+            imageUrl: widget.pokemonDetail['img'],
+                height: 250,
+                fit: BoxFit.fitHeight,
+          ))
 
         ],
       ),
