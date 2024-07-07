@@ -102,10 +102,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               Positioned(
                                 bottom: 5,
                                 right: 5,
-                                  child: CachedNetworkImage(
-                                      imageUrl: pokedex[index]['img'],
-                                      height: 100,
-                                    fit: BoxFit.fitHeight,
+                                  child: Hero(
+                                    tag: index,
+                                    child: CachedNetworkImage(
+                                        imageUrl: pokedex[index]['img'],
+                                        height: 100,
+                                      fit: BoxFit.fitHeight,
+                                    ),
                                   ),
                               ),
                             ],
