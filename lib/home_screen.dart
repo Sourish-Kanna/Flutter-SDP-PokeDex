@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -12,7 +13,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> pokedex = [];
-  // late List pokedex;
   @override
   void initState() {
     super.initState();
@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
-    var height = MediaQuery.of(context).size.height;
+    // var height = MediaQuery.of(context).size.height;
     return Scaffold(
       body: Stack(
         children: [
@@ -79,8 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void fetchPokemonData() {
-    Pokedex().pokemon.getPage(limit: 2).then((response) {
-    // Pokedex().pokemon.getAll().then((response) {
+    // Pokedex().pokemon.getPage(limit: 1).then((response) {
+    Pokedex().pokemon.getAll().then((response) {
       pokedex = response.results;
       // Pokedex().pokemon.get(name: response.results.first.name).then((response) {
       //     print(prettyJson(response.types.first.type.name));
@@ -95,43 +95,40 @@ class _HomeScreenState extends State<HomeScreen> {
     return encoder.convert(json);
   }
 
+  dynamic parseJson(String jsonString) {
+    return json.decode(jsonString);
+  }
+
   Color getColorByType(String? type) {
     switch (type) {
-      case 'Grass':
+      case 'grass':
         return Colors.greenAccent;
-      case 'Fire':
+      case 'fire':
         return Colors.redAccent;
-      case 'Water':
+      case 'water':
         return Colors.blue;
-      case 'Electric':
+      case 'electric':
         return Colors.yellow;
-      case 'Rock':
+      case 'rock':
         return Colors.grey;
-      case 'Ground':
+      case 'ground':
         return Colors.brown;
-      case 'Psychic':
+      case 'psychic':
         return Colors.indigo;
-      case 'Fighting':
+      case 'fighting':
         return Colors.orange;
-      case 'Bug':
+      case 'bug':
         return Colors.lightGreenAccent;
-      case 'Ghost':
+      case 'ghost':
         return Colors.deepPurple;
-      case 'Normal':
+      case 'normal':
         return Colors.blueGrey;
-      case 'Poison':
+      case 'poison':
         return Colors.deepPurpleAccent;
       default:
         return Colors.pinkAccent;
     }
   }
-
-  // Future<dynamic> PokeDetail(List<dynamic> pokedex, int index) async {
-  //   Pokedex().pokemon.get(name: pokedex[index].name).then((response) {
-  //     print(prettyJson(response.types[0].type.name));
-  //     return(response);
-  //   });
-  // }
 
   Future<Widget> getPokemonWidget(int index) async {
     var pokemonData = await fetchPokemonDetail(index);
@@ -146,8 +143,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget buildPokemonWidget(dynamic pokemonData) {
     // Extract necessary data from pokemonData and return the Widget
-    var type = pokemonData.types[0].type.name;
-    print(pokemonData);
+    var pokemon = parseJson(prettyJson(pokemonData));
+    var type = pokemon['types'][0]['type']['name'].toString();
+    String id = pokemon['id'].toString();
     return InkWell(
         child: Padding(
             padding: const EdgeInsets.symmetric(
@@ -162,25 +160,95 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Positioned(
                       bottom: -5,
-                      right: -37,
+                      right: -45,
                       child: Image.asset(
                           'images/pokeball.png',
-                          height: 110,
+                          height: 100,
                           fit: BoxFit.fitHeight)
                   ),
                   Positioned(
-                      bottom: -5,
-                      right: -37,
-                      child: Image.asset(
-                          'images/pokeball.png',
-                          height: 110,
-                          fit: BoxFit.fitHeight)
-                  )
+                      bottom: 0,
+                      right: 0,
+                      child:FutureBuilder<String>(
+                        future: fetchImage(id),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done) {
+                            return CachedNetworkImage(
+                              height: 110,
+                              imageUrl: snapshot.data!,
+                              errorWidget: (context, url, error) =>
+                                  Icon(Icons.error),
+                              fit: BoxFit.fitHeight,
+                            );
+                          } else {
+                            return Center(child: CircularProgressIndicator());
+                          }
+                        },
+                      )
+                  ),
+                  Positioned(
+                    top: 50,
+                    left: 10,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(
+                            Radius.circular(10)),
+                        color: Colors.black38,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4, right: 4,
+                            top: 1, bottom: 1),
+                        child: Text(
+                          type,
+                          style: const TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 10,
+                    left: 5,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(
+                            Radius.circular(10)),
+                        color: Colors.black12,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4, right: 4,
+                            top: 1, bottom: 1),
+                        child: Text(
+                          pokemon['name'],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             )
         )
     );
   }
+
+  Future<String> fetchImage( String id) async {
+    String url = 'https://pokeapi.co/api/v2/pokemon/'+id;
+    // Make GET request
+    http.Response response = await http.get(Uri.parse(url));
+
+    // Check if the request was successful
+    if (response.statusCode == 200) {
+      // Successful response
+      return(parseJson(response.body)['sprites']['other']['official-artwork']['front_default'].toString());
+    } else {
+      return(response.statusCode.toString());
+    }
+  }
+
 
 }
