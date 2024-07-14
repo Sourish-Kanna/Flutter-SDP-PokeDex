@@ -169,22 +169,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   Positioned(
                       bottom: 0,
                       right: 0,
-                      child:FutureBuilder<String>(
-                        future: fetchImage(id),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done) {
-                            return CachedNetworkImage(
-                              height: 110,
-                              imageUrl: snapshot.data!,
-                              errorWidget: (context, url, error) =>
-                                  Icon(Icons.error),
-                              fit: BoxFit.fitHeight,
-                            );
-                          } else {
-                            return Center(child: CircularProgressIndicator());
-                          }
-                        },
-                      )
+                      child: Hero(
+                        tag: int.parse(id),
+                          child: FutureBuilder<String>(
+                            future: fetchImage(id),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.done) {
+                                return CachedNetworkImage(
+                                  height: 110,
+                                  imageUrl: snapshot.data!,
+                                  errorWidget: (context, url, error) =>
+                                      Icon(Icons.error),
+                                  fit: BoxFit.fitHeight,
+                                );
+                              } else {
+                                return Center(child: CircularProgressIndicator());
+                              }
+                            },
+                          )
+                      ),
                   ),
                   Positioned(
                     top: 50,
@@ -232,7 +235,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             )
-        )
+        ),
+        onTap: () {
+          Navigator.push(
+            context, MaterialPageRoute(builder: (_) =>
+            PokemonDetailScreen(
+                pokemonDetail: pokemon[id],
+                color: getColorByType(type),
+                heroTag: int.parse(id),
+            )
+            )
+          );
+        }
     );
   }
 
