@@ -11,7 +11,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late List pokedex;
+  List<dynamic> pokedex = [];
 
   @override
   void initState() {
@@ -60,29 +60,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     childAspectRatio: 1.4,
                   ), itemCount: pokedex.length,
                   itemBuilder: (context, index) {
-                    // var type = fetch_primary_type(pokedex, context, index);
-                    var pokemon = PokeDetail(pokedex, context, index);
-                    var type = pokemon.types[0].type.name;
+                    var type = fetch_primary_type(pokedex, context, index).toString();
+                    var img = fetch_image(pokedex, context, index).toString();
                     return InkWell(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             vertical: 8.0, horizontal: 12),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: type == 'Grass'
-                                ? Colors.greenAccent
-                                : type == "Fire" ? Colors.redAccent : type ==
-                                "Water" ? Colors.blue
-                                : type == "Electric" ? Colors.yellow : type ==
-                                "Rock" ? Colors.grey : type == "Ground" ? Colors
-                                .brown
-                                : type == "Psychic" ? Colors.indigo : type ==
-                                "Fighting" ? Colors.orange : type == "Bug"
-                                ? Colors.lightGreenAccent
-                                : type == "Ghost" ? Colors.deepPurple : type ==
-                                "Normal" ? Colors.blueGrey : type == "Poison"
-                                ? Colors.deepPurpleAccent
-                                : Colors.pinkAccent,
+                            color: getColorByType(type),
                             borderRadius: BorderRadius.all(Radius.circular(20)),
                           ),
                           child: Stack(
@@ -133,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: Hero(
                                   tag: index,
                                   child: CachedNetworkImage(
-                                    imageUrl: pokemon.sprites.frontDefault,
+                                    imageUrl: img,
                                     errorWidget: (context, url, error) => Icon(Icons.error), // Handle image load errors
                                     height: 100,
                                     fit: BoxFit.fitHeight,
@@ -148,25 +134,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             context, MaterialPageRoute(builder: (_) =>
                             PokemonDetailScreen(
                               pokemonDetail: pokedex[index],
-                              color: type == 'Grass'
-                                  ? Colors.greenAccent
-                                  : type == "Fire" ? Colors.redAccent : type ==
-                                  "Water" ? Colors.blue
-                                  : type == "Electric" ? Colors.yellow : type ==
-                                  "Rock" ? Colors.grey : type == "Ground"
-                                  ? Colors.brown
-                                  : type == "Psychic" ? Colors.indigo : type ==
-                                  "Fighting" ? Colors.orange : type == "Bug"
-                                  ? Colors.lightGreenAccent
-                                  : type == "Ghost"
-                                  ? Colors.deepPurple
-                                  : type == "Normal" ? Colors.blueGrey : type ==
-                                  "Poison" ? Colors.deepPurpleAccent : Colors
-                                  .pinkAccent,
+                              color: getColorByType(type),
                               heroTag: index,
                             )));
                       },
-
                     );
                   },
                 )
@@ -187,7 +158,6 @@ class _HomeScreenState extends State<HomeScreen> {
       var name1 = response.results;
       pokedex = response.results;
       // print(prettyJson(name1));
-      // print(name1[0].name);
       // Pokedex().pokemon.get(name: name1[0].name).then((response) {
       //   print(response.sprites.frontDefault);
       // });
@@ -202,29 +172,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<dynamic> fetch_primary_type(List<dynamic> pokedex, BuildContext context, int index) async {
     Pokedex().pokemon.get(name: pokedex[index].name).then((response) {
-      print(prettyJson(response.types[0].type.name));
+      // print(prettyJson(response.types[0].type.name));
       return(response.types[0].type.name);
     });
   }
 
-  PokeDetail(List<dynamic> pokedex, BuildContext context, int index) {
+  Future<String> fetch_image(List<dynamic> pokedex, BuildContext context, int index) async {
     Pokedex().pokemon.get(name: pokedex[index].name).then((response) {
-      print(prettyJson(response.types[0].type.name));
-      return(response);
+      // print(response.sprites.frontDefault);
+      return(response.sprites.frontDefault);
     });
+    return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png';
   }
 
-  // Future<String> fetch_imageurl(List<dynamic> pokedex, BuildContext context, int index) async {
-  //   final response = await Pokedex().pokemon.get(name: pokedex[index].name);
-  //   final imageUrl = response.sprites.frontDefault;
-  //
-  //   // Handle potential null imageUrl
-  //   if (imageUrl == null) {
-  //     // Handle null image URL, e.g., return a default image URL
-  //     return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png';
-  //   }
-  //
-  //   return imageUrl;
-  // }
+  Color getColorByType(String type) {
+    switch (type) {
+      case 'Grass':
+        return Colors.greenAccent;
+      case 'Fire':
+        return Colors.redAccent;
+      case 'Water':
+        return Colors.blue;
+      case 'Electric':
+        return Colors.yellow;
+      case 'Rock':
+        return Colors.grey;
+      case 'Ground':
+        return Colors.brown;
+      case 'Psychic':
+        return Colors.indigo;
+      case 'Fighting':
+        return Colors.orange;
+      case 'Bug':
+        return Colors.lightGreenAccent;
+      case 'Ghost':
+        return Colors.deepPurple;
+      case 'Normal':
+        return Colors.blueGrey;
+      case 'Poison':
+        return Colors.deepPurpleAccent;
+      default:
+        return Colors.pinkAccent;
+    }
+  }
 
 }
