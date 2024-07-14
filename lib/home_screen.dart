@@ -126,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               right: 5,
                                               child: Hero(
                                                   tag: index,
-                                                  child: CachedNetworkImage(
+                                                  child: CachedNetworkImage( // see here
                                                     imageUrl: img ?? 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png',
                                                     errorWidget: (context, url, error) => Icon(Icons.error), // Handle image load errors
                                                     height: 100,
