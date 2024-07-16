@@ -169,8 +169,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           fit: BoxFit.fitHeight)
                   ),
                   Positioned(
-                      bottom: 0,
-                      right: 0,
+                      bottom: -5,
+                      right: -10,
                       child: Hero(
                         tag: int.parse(id),
                           child: FutureBuilder<String>(
