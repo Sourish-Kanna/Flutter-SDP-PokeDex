@@ -269,7 +269,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               top: height * 0.20,
               left: (width/2)-100,
               child: Hero(
-                  tag: int.parse(id),
+                  tag: widget.heroTag,
                   child: FutureBuilder<String>(
                     future: fetchImage(id),
                     builder: (context, snapshot) {
