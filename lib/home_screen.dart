@@ -80,13 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void fetchPokemonData() {
-    // Pokedex().pokemon.getPage(limit: 1).then((response) {
     Pokedex().pokemon.getAll().then((response) {
       pokedex = response.results;
-      // Pokedex().pokemon.get(name: response.results.first.name).then((response) {
-      //     print(prettyJson(response.types.first.type.name));
-      //     print(response.sprites.frontDefault);
-      //   });
       setState(() {});
     });
   }
@@ -140,6 +135,20 @@ class _HomeScreenState extends State<HomeScreen> {
     var pokemonName = pokedex[index].name;
     var response = await Pokedex().pokemon.get(name: pokemonName);
     return response;
+  }
+
+  Future<String> fetchImage( String id) async {
+    String url = 'https://pokeapi.co/api/v2/pokemon/'+id;
+    // Make GET request
+    http.Response response = await http.get(Uri.parse(url));
+
+    // Check if the request was successful
+    if (response.statusCode == 200) {
+      // Successful response
+      return(parseJson(response.body)['sprites']['other']['official-artwork']['front_default'].toString());
+    } else {
+      return(response.statusCode.toString());
+    }
   }
 
   Widget buildPokemonWidget(dynamic pokemonData) {
@@ -242,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context, MaterialPageRoute(builder: (_) =>
             PokemonDetailScreen(
-                pokemonDetail: pokemon[id],
+                pokemonDetail: pokemon,
                 color: getColorByType(type),
                 heroTag: int.parse(id),
             )
@@ -251,20 +260,5 @@ class _HomeScreenState extends State<HomeScreen> {
         }
     );
   }
-
-  Future<String> fetchImage( String id) async {
-    String url = 'https://pokeapi.co/api/v2/pokemon/'+id;
-    // Make GET request
-    http.Response response = await http.get(Uri.parse(url));
-
-    // Check if the request was successful
-    if (response.statusCode == 200) {
-      // Successful response
-      return(parseJson(response.body)['sprites']['other']['official-artwork']['front_default'].toString());
-    } else {
-      return(response.statusCode.toString());
-    }
-  }
-
 
 }
