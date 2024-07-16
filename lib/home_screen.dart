@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pokemon/pokemon_detail_screen.dart';
 import 'package:pokedex/pokedex.dart';
+import 'package:string_capitalize/string_capitalize.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -101,29 +102,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Color getColorByType(String? type) {
     switch (type) {
-      case 'grass':
+      case 'Grass':
         return Colors.greenAccent;
-      case 'fire':
+      case 'Fire':
         return Colors.redAccent;
-      case 'water':
+      case 'Water':
         return Colors.blue;
-      case 'electric':
+      case 'Electric':
         return Colors.yellow;
-      case 'rock':
+      case 'Rock':
         return Colors.grey;
-      case 'ground':
+      case 'Ground':
         return Colors.brown;
-      case 'psychic':
+      case 'Psychic':
         return Colors.indigo;
-      case 'fighting':
+      case 'Fighting':
         return Colors.orange;
-      case 'bug':
+      case 'Bug':
         return Colors.lightGreenAccent;
-      case 'ghost':
+      case 'Ghost':
         return Colors.deepPurple;
-      case 'normal':
+      case 'Normal':
         return Colors.blueGrey;
-      case 'poison':
+      case 'Poison':
         return Colors.deepPurpleAccent;
       default:
         return Colors.pinkAccent;
@@ -144,7 +145,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget buildPokemonWidget(dynamic pokemonData) {
     // Extract necessary data from pokemonData and return the Widget
     var pokemon = parseJson(prettyJson(pokemonData));
-    var type = pokemon['types'][0]['type']['name'].toString();
+    String type = pokemon['types'][0]['type']['name'].toString().capitalize();
+    String Pokename = pokemon['name'].toString().capitalize();
     String id = pokemon['id'].toString();
     return InkWell(
         child: Padding(
@@ -223,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.only(left: 4, right: 4,
                             top: 1, bottom: 1),
                         child: Text(
-                          pokemon['name'],
+                          Pokename,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18,
                             color: Colors.white,
