@@ -33,6 +33,7 @@ dependencies:
   pokedex:
   http:
   cached_network_image:
+  string_capitalize: ^0.0.10
 
 
   # The following adds the Cupertino Icons font to your application.

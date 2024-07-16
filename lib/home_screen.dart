@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pokemon/pokemon_detail_screen.dart';
 import 'package:pokedex/pokedex.dart';
+import 'package:string_capitalize/string_capitalize.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -79,13 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void fetchPokemonData() {
-    // Pokedex().pokemon.getPage(limit: 1).then((response) {
     Pokedex().pokemon.getAll().then((response) {
       pokedex = response.results;
-      // Pokedex().pokemon.get(name: response.results.first.name).then((response) {
-      //     print(prettyJson(response.types.first.type.name));
-      //     print(response.sprites.frontDefault);
-      //   });
       setState(() {});
     });
   }
@@ -101,29 +97,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Color getColorByType(String? type) {
     switch (type) {
-      case 'grass':
+      case 'Grass':
         return Colors.greenAccent;
-      case 'fire':
+      case 'Fire':
         return Colors.redAccent;
-      case 'water':
+      case 'Water':
         return Colors.blue;
-      case 'electric':
+      case 'Electric':
         return Colors.yellow;
-      case 'rock':
+      case 'Rock':
         return Colors.grey;
-      case 'ground':
+      case 'Ground':
         return Colors.brown;
-      case 'psychic':
+      case 'Psychic':
         return Colors.indigo;
-      case 'fighting':
+      case 'Fighting':
         return Colors.orange;
-      case 'bug':
+      case 'Bug':
         return Colors.lightGreenAccent;
-      case 'ghost':
+      case 'Ghost':
         return Colors.deepPurple;
-      case 'normal':
+      case 'Normal':
         return Colors.blueGrey;
-      case 'poison':
+      case 'Poison':
         return Colors.deepPurpleAccent;
       default:
         return Colors.pinkAccent;
@@ -141,10 +137,25 @@ class _HomeScreenState extends State<HomeScreen> {
     return response;
   }
 
+  Future<String> fetchImage( String id) async {
+    String url = 'https://pokeapi.co/api/v2/pokemon/'+id;
+    // Make GET request
+    http.Response response = await http.get(Uri.parse(url));
+
+    // Check if the request was successful
+    if (response.statusCode == 200) {
+      // Successful response
+      return(parseJson(response.body)['sprites']['other']['official-artwork']['front_default'].toString());
+    } else {
+      return(response.statusCode.toString());
+    }
+  }
+
   Widget buildPokemonWidget(dynamic pokemonData) {
     // Extract necessary data from pokemonData and return the Widget
     var pokemon = parseJson(prettyJson(pokemonData));
-    var type = pokemon['types'][0]['type']['name'].toString();
+    String type = pokemon['types'][0]['type']['name'].toString().capitalize();
+    String Pokename = pokemon['name'].toString().capitalize();
     String id = pokemon['id'].toString();
     return InkWell(
         child: Padding(
@@ -167,27 +178,45 @@ class _HomeScreenState extends State<HomeScreen> {
                           fit: BoxFit.fitHeight)
                   ),
                   Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Hero(
-                        tag: int.parse(id),
-                          child: FutureBuilder<String>(
-                            future: fetchImage(id),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.done) {
-                                return CachedNetworkImage(
-                                  height: 110,
-                                  imageUrl: snapshot.data!,
-                                  errorWidget: (context, url, error) =>
-                                      Icon(Icons.error),
-                                  fit: BoxFit.fitHeight,
-                                );
-                              } else {
-                                return Center(child: CircularProgressIndicator());
-                              }
-                            },
-                          )
-                      ),
+                      bottom: -5,
+                      right: -10,
+                      // child: Hero(
+                      //   tag: int.parse(id),
+                      //     child: FutureBuilder<String>(
+                      //       future: fetchImage(id),
+                      //       builder: (context, snapshot) {
+                      //         if (snapshot.connectionState == ConnectionState.done) {
+                      //           return CachedNetworkImage(
+                      //             height: 110,
+                      //             imageUrl: snapshot.data!,
+                      //             errorWidget: (context, url, error) =>
+                      //                 Icon(Icons.error),
+                      //             fit: BoxFit.fitHeight,
+                      //           );
+                      //         } else {
+                      //           return Center(child: CircularProgressIndicator());
+                      //         }
+                      //       },
+                      //     )
+                      // ),
+                    child: FutureBuilder<String>(
+                      future: fetchImage(id),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return CachedNetworkImage(
+                            height: 110,
+                            imageUrl: snapshot.data!,
+                            errorWidget: (context, url, error) =>
+                                Icon(Icons.error),
+                            fit: BoxFit.fitHeight,
+                          );
+                        } else {
+                          return Center(child: CircularProgressIndicator());
+                        }
+                      },
+                    )
+
+                    ,
                   ),
                   Positioned(
                     top: 50,
@@ -223,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.only(left: 4, right: 4,
                             top: 1, bottom: 1),
                         child: Text(
-                          pokemon['name'],
+                          Pokename,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18,
                             color: Colors.white,
@@ -240,29 +269,14 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context, MaterialPageRoute(builder: (_) =>
             PokemonDetailScreen(
-                pokemonDetail: pokemon[id],
+                pokemonDetail: pokemon,
                 color: getColorByType(type),
-                heroTag: int.parse(id),
+                // heroTag: int.parse(id),
             )
             )
           );
         }
     );
   }
-
-  Future<String> fetchImage( String id) async {
-    String url = 'https://pokeapi.co/api/v2/pokemon/'+id;
-    // Make GET request
-    http.Response response = await http.get(Uri.parse(url));
-
-    // Check if the request was successful
-    if (response.statusCode == 200) {
-      // Successful response
-      return(parseJson(response.body)['sprites']['other']['official-artwork']['front_default'].toString());
-    } else {
-      return(response.statusCode.toString());
-    }
-  }
-
 
 }
