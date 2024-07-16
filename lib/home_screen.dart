@@ -180,25 +180,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   Positioned(
                       bottom: -5,
                       right: -10,
-                      child: Hero(
-                        tag: int.parse(id),
-                          child: FutureBuilder<String>(
-                            future: fetchImage(id),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.done) {
-                                return CachedNetworkImage(
-                                  height: 110,
-                                  imageUrl: snapshot.data!,
-                                  errorWidget: (context, url, error) =>
-                                      Icon(Icons.error),
-                                  fit: BoxFit.fitHeight,
-                                );
-                              } else {
-                                return Center(child: CircularProgressIndicator());
-                              }
-                            },
-                          )
-                      ),
+                      // child: Hero(
+                      //   tag: int.parse(id),
+                      //     child: FutureBuilder<String>(
+                      //       future: fetchImage(id),
+                      //       builder: (context, snapshot) {
+                      //         if (snapshot.connectionState == ConnectionState.done) {
+                      //           return CachedNetworkImage(
+                      //             height: 110,
+                      //             imageUrl: snapshot.data!,
+                      //             errorWidget: (context, url, error) =>
+                      //                 Icon(Icons.error),
+                      //             fit: BoxFit.fitHeight,
+                      //           );
+                      //         } else {
+                      //           return Center(child: CircularProgressIndicator());
+                      //         }
+                      //       },
+                      //     )
+                      // ),
+                    child: FutureBuilder<String>(
+                      future: fetchImage(id),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return CachedNetworkImage(
+                            height: 110,
+                            imageUrl: snapshot.data!,
+                            errorWidget: (context, url, error) =>
+                                Icon(Icons.error),
+                            fit: BoxFit.fitHeight,
+                          );
+                        } else {
+                          return Center(child: CircularProgressIndicator());
+                        }
+                      },
+                    )
+
+                    ,
                   ),
                   Positioned(
                     top: 50,
@@ -253,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
             PokemonDetailScreen(
                 pokemonDetail: pokemon,
                 color: getColorByType(type),
-                heroTag: int.parse(id),
+                // heroTag: int.parse(id),
             )
             )
           );

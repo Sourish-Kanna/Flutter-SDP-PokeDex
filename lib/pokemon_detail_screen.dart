@@ -7,9 +7,9 @@ import 'dart:convert';
 class PokemonDetailScreen extends StatefulWidget {
  final pokemonDetail;
  final Color color;
- final int heroTag;
+ // final int heroTag;
 
-  const PokemonDetailScreen({super.key, this.pokemonDetail, required this.color, required this.heroTag});
+  const PokemonDetailScreen({super.key, this.pokemonDetail, required this.color});
 
   @override
   _PokemonDetailScreenState createState() => _PokemonDetailScreenState();
@@ -269,7 +269,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               top: height * 0.20,
               left: (width/2)-100,
               child: Hero(
-                  tag: widget.heroTag,
+                  tag: int.parse(id),
                   child: FutureBuilder<String>(
                     future: fetchImage(id),
                     builder: (context, snapshot) {
