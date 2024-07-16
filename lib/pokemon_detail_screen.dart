@@ -21,13 +21,13 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
     var pokemon = widget.pokemonDetail;
-    String name = pokemon['name'].toString().capitalize();
     var typeNames = pokemon['types'].map((item) => item['type']['name']).toList();
     String type = typeNames.join(', ').toString().capitalizeEach();
     String id = pokemon['id'].toString();
+    String name = pokemon['name'].toString().capitalize();
     String PokeHeight = "${(pokemon['height'] / 10).toString()} m";
     String PokeWeight = "${(pokemon['weight'] / 10).toString()} Kg";
-
+    print(prettyJson(pokemon));
 
     return Scaffold(
       backgroundColor: widget.color,
@@ -297,6 +297,11 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
 
   dynamic parseJson(String jsonString) {
     return json.decode(jsonString);
+  }
+
+  String prettyJson(dynamic json) {
+    const encoder = JsonEncoder.withIndent('  ');
+    return encoder.convert(json);
   }
 
 
