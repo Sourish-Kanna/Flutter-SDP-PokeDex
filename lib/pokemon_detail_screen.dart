@@ -1,5 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:string_capitalize/string_capitalize.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 class PokemonDetailScreen extends StatefulWidget {
  final pokemonDetail;
  final Color color;
@@ -10,12 +14,21 @@ class PokemonDetailScreen extends StatefulWidget {
   @override
   _PokemonDetailScreenState createState() => _PokemonDetailScreenState();
 }
-//hello world
+
 class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   @override
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
+    var pokemon = widget.pokemonDetail;
+    String name = pokemon['name'].toString().capitalize();
+    var typeNames = pokemon['types'].map((item) => item['type']['name']).toList();
+    String type = typeNames.join(', ').toString().capitalizeEach();
+    String id = pokemon['id'].toString();
+    String PokeHeight = "${(pokemon['height'] / 10).toString()} m";
+    String PokeWeight = "${(pokemon['weight'] / 10).toString()} Kg";
+
+
     return Scaffold(
       backgroundColor: widget.color,
       body: Stack(
@@ -27,10 +40,11 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             child: IconButton( icon: Icon(Icons.arrow_back, color: Colors.white, size: 30,),onPressed: (){ Navigator.pop(context);
             }),
           ),
+
           Positioned(
             top: 90,
               left: 20,
-              child: Text(widget.pokemonDetail['name'],style: TextStyle(
+              child: Text(name,style: TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold,
                 fontSize: 30,
               ),)),
@@ -41,7 +55,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               child: Container(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 4.0,bottom: 4.0),
-                  child: Text(widget.pokemonDetail['type'].join(','),style: TextStyle(
+                  child: Text(type,style: TextStyle(
                     color: Colors.white
                   ),),
                 ),
@@ -58,6 +72,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             right: -120,
             child: Image.asset("images/pokeball.png", height: 250, fit: BoxFit.fitHeight,),
           ),
+
           Positioned(
             bottom: 0,
             child: Container(
@@ -86,7 +101,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                                  ),),
                              ),
                             Container(
-                              child: Text(widget.pokemonDetail['name'], style: TextStyle(
+                              child: Text(name, style: TextStyle(
                                 color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
                               ),),
                             ),
@@ -106,7 +121,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               ),),
                             ),
                             Container(
-                              child: Text(widget.pokemonDetail['height'], style: TextStyle(
+                              child: Text(PokeHeight, style: TextStyle(
                                   color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
                               ),),
                             ),
@@ -126,7 +141,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               ),),
                             ),
                             Container(
-                              child: Text(widget.pokemonDetail['weight'], style: TextStyle(
+                              child: Text(PokeWeight, style: TextStyle(
                                   color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
                               ),),
                             ),
@@ -134,114 +149,114 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                         ),
                       ),
 
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            Container(
-                              width: width * 0.3,
-                              child: Text("Spawn Time", style: TextStyle(
-                                color: Colors.blueGrey, fontSize: 18,
-                              ),),
-                            ),
-                            Container(
-                              child: Text(widget.pokemonDetail['spawn_time'], style: TextStyle(
-                                  color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
-                              ),),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // Padding(
+                      //   padding: const EdgeInsets.all(8.0),
+                      //   child: Row(
+                      //     mainAxisAlignment: MainAxisAlignment.start,
+                      //     children:[
+                      //       Container(
+                      //         width: width * 0.3,
+                      //         child: Text("Spawn Time", style: TextStyle(
+                      //           color: Colors.blueGrey, fontSize: 18,
+                      //         ),),
+                      //       ),
+                      //       Container(
+                      //         child: Text(widget.pokemonDetail['spawn_time'], style: TextStyle(
+                      //             color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
+                      //         ),),
+                      //       ),
+                      //     ],
+                      //   ),
+                      // ),
 
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            Container(
-                              width: width * 0.3,
-                              child: Text("Weakness", style: TextStyle(
-                                color: Colors.blueGrey, fontSize: 18,
-                              ),),
-                            ),
-                            Container(
-                              child: Text(widget.pokemonDetail['weaknesses'].join(","), style: TextStyle(
-                                  color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
-                              ),),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // Padding(
+                      //   padding: const EdgeInsets.all(8.0),
+                      //   child: Row(
+                      //     mainAxisAlignment: MainAxisAlignment.start,
+                      //     children:[
+                      //       Container(
+                      //         width: width * 0.3,
+                      //         child: Text("Weakness", style: TextStyle(
+                      //           color: Colors.blueGrey, fontSize: 18,
+                      //         ),),
+                      //       ),
+                      //       Container(
+                      //         child: Text(widget.pokemonDetail['weaknesses'].join(","), style: TextStyle(
+                      //             color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
+                      //         ),),
+                      //       ),
+                      //     ],
+                      //   ),
+                      // ),
 
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            Container(
-                              width: width * 0.3,
-                              child: Text("Pre Form", style: TextStyle(
-                                color: Colors.blueGrey, fontSize: 18,
-                              ),),
-                            ),
-                            widget.pokemonDetail['prev_evolution'] != null ?
-                            SizedBox(
-                              height: 20,
-                              width: width * 0.55,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: widget.pokemonDetail['prev_evolution'].length,
-                                itemBuilder: (context, index){
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: Text(widget.pokemonDetail['prev_evolution'][index]['name'], style: TextStyle(
-                                        color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
-                                    ),),
-                                  );
-                                },
-                              ),
-                            ): Text('just Hatched', style: TextStyle(
-                                color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
-                            ),)
-                          ],
-                        ),
-                      ),
+                      // Padding(
+                      //   padding: const EdgeInsets.all(8.0),
+                      //   child: Row(
+                      //     mainAxisAlignment: MainAxisAlignment.start,
+                      //     children:[
+                      //       Container(
+                      //         width: width * 0.3,
+                      //         child: Text("Pre Form", style: TextStyle(
+                      //           color: Colors.blueGrey, fontSize: 18,
+                      //         ),),
+                      //       ),
+                      //       widget.pokemonDetail['prev_evolution'] != null ?
+                      //       SizedBox(
+                      //         height: 20,
+                      //         width: width * 0.55,
+                      //         child: ListView.builder(
+                      //           scrollDirection: Axis.horizontal,
+                      //           itemCount: widget.pokemonDetail['prev_evolution'].length,
+                      //           itemBuilder: (context, index){
+                      //             return Padding(
+                      //               padding: const EdgeInsets.only(right: 8.0),
+                      //               child: Text(widget.pokemonDetail['prev_evolution'][index]['name'], style: TextStyle(
+                      //                   color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
+                      //               ),),
+                      //             );
+                      //           },
+                      //         ),
+                      //       ): Text('just Hatched', style: TextStyle(
+                      //           color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
+                      //       ),)
+                      //     ],
+                      //   ),
+                      // ),
 
 
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            Container(
-                              width: width * 0.3,
-                              child: Text("Evolution", style: TextStyle(
-                                color: Colors.blueGrey, fontSize: 18,
-                              ),),
-                            ),
-                            widget.pokemonDetail['next_evolution'] != null ?
-                            SizedBox(
-                              height: 20,
-                              width: width * 0.55,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                  itemCount: widget.pokemonDetail['next_evolution'].length,
-                                  itemBuilder: (context, index){
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 8.0),
-                                      child: Text(widget.pokemonDetail['next_evolution'][index]['name'], style: TextStyle(
-                                          color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
-                                      ),),
-                                    );
-                                  },
-                              ),
-                            ): Text('Maxed Out', style: TextStyle(
-                                color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
-                            ),)
-                          ],
-                        ),
-                      ),
+                      // Padding(
+                      //   padding: const EdgeInsets.all(8.0),
+                      //   child: Row(
+                      //     mainAxisAlignment: MainAxisAlignment.start,
+                      //     children:[
+                      //       Container(
+                      //         width: width * 0.3,
+                      //         child: Text("Evolution", style: TextStyle(
+                      //           color: Colors.blueGrey, fontSize: 18,
+                      //         ),),
+                      //       ),
+                      //       widget.pokemonDetail['next_evolution'] != null ?
+                      //       SizedBox(
+                      //         height: 20,
+                      //         width: width * 0.55,
+                      //         child: ListView.builder(
+                      //           scrollDirection: Axis.horizontal,
+                      //             itemCount: widget.pokemonDetail['next_evolution'].length,
+                      //             itemBuilder: (context, index){
+                      //               return Padding(
+                      //                 padding: const EdgeInsets.only(right: 8.0),
+                      //                 child: Text(widget.pokemonDetail['next_evolution'][index]['name'], style: TextStyle(
+                      //                     color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
+                      //                 ),),
+                      //               );
+                      //             },
+                      //         ),
+                      //       ): Text('Maxed Out', style: TextStyle(
+                      //           color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold
+                      //       ),)
+                      //     ],
+                      //   ),
+                      // ),
 
 
                     ],
@@ -249,22 +264,53 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               ),
               ),
             ),
+
           Positioned(
-            
-              top: height * 0.16,
+              top: height * 0.20,
               left: (width/2)-100,
               child: Hero(
-                tag: widget.heroTag,
-                child: CachedNetworkImage(
-                            imageUrl: widget.pokemonDetail['img'],
-                  height: 250,
-                  fit: BoxFit.fitHeight,
-                          ),
-              ))
+                  tag: int.parse(id),
+                  child: FutureBuilder<String>(
+                    future: fetchImage(id),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return CachedNetworkImage(
+                          height: 200,
+                          imageUrl: snapshot.data!,
+                          errorWidget: (context, url, error) =>
+                              Icon(Icons.error),
+                          fit: BoxFit.fitHeight,
+                        );
+                      } else {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                    },
+                  )
+              )
+          )
 
         ],
       ),
 
     );
+  }
+
+  dynamic parseJson(String jsonString) {
+    return json.decode(jsonString);
+  }
+
+
+  Future<String> fetchImage( String id) async {
+    String url = 'https://pokeapi.co/api/v2/pokemon/'+id;
+    // Make GET request
+    http.Response response = await http.get(Uri.parse(url));
+
+    // Check if the request was successful
+    if (response.statusCode == 200) {
+      // Successful response
+      return(parseJson(response.body)['sprites']['other']['official-artwork']['front_default'].toString());
+    } else {
+      return(response.statusCode.toString());
+    }
   }
 }
