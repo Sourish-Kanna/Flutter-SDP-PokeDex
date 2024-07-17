@@ -4,12 +4,13 @@ import 'package:string_capitalize/string_capitalize.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+
 class PokemonDetailScreen extends StatefulWidget {
  final pokemonDetail;
  final Color color;
  // final int heroTag;
 
-  const PokemonDetailScreen({super.key, this.pokemonDetail, required this.color});
+  const PokemonDetailScreen({super.key, this.pokemonDetail, required this.color});  //, required this.heroTag});
 
   @override
   _PokemonDetailScreenState createState() => _PokemonDetailScreenState();
@@ -22,22 +23,24 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     var height = MediaQuery.of(context).size.height;
     var pokemon = widget.pokemonDetail;
     var typeNames = pokemon['types'].map((item) => item['type']['name']).toList();
+    String type1 = typeNames.first.toString().capitalize();
+    String type2 = typeNames.last.toString().capitalize();
     String type = typeNames.join(', ').toString().capitalizeEach();
     String id = pokemon['id'].toString();
     String name = pokemon['name'].toString().capitalize();
     String PokeHeight = "${(pokemon['height'] / 10).toString()} m";
     String PokeWeight = "${(pokemon['weight'] / 10).toString()} Kg";
-    print(prettyJson(pokemon));
 
     return Scaffold(
-      backgroundColor: widget.color,
+      backgroundColor: getColorByType(type1).withOpacity(0.75),
       body: Stack(
         alignment: Alignment.center,
         children: [
           Positioned(
             top: 30,
             left: 5,
-            child: IconButton( icon: Icon(Icons.arrow_back, color: Colors.white, size: 30,),onPressed: (){ Navigator.pop(context);
+            child: IconButton( icon: Icon(Icons.arrow_back, color: Colors.white,
+              size: 30,),onPressed: (){ Navigator.pop(context);
             }),
           ),
 
@@ -54,16 +57,19 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               left: 20,
               child: Container(
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 4.0,bottom: 4.0),
-                  child: Text(type,style: TextStyle(
-                    color: Colors.white
-                  ),),
+                  padding: const EdgeInsets.only(left: 8.0, right: 8.0,
+                      top: 4.0,bottom: 4.0),
+                  child: Text(type,style: TextStyle(color: Colors.white,
+                      fontWeight: FontWeight.bold, ),),
                 ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(10),),
-                  color: Colors.black26
+                  borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(
+                    colors: [getColorByType(type1), getColorByType(type2)],
+                    transform: GradientRotation(1.0),
+                    stops: [0.50,0.50],
+                  ),
                 ),
-
               ),
           ),
 
@@ -268,24 +274,40 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           Positioned(
               top: height * 0.20,
               left: (width/2)-100,
-              child: Hero(
-                  tag: int.parse(id),
-                  child: FutureBuilder<String>(
-                    future: fetchImage(id),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return CachedNetworkImage(
-                          height: 200,
-                          imageUrl: snapshot.data!,
-                          errorWidget: (context, url, error) =>
-                              Icon(Icons.error),
-                          fit: BoxFit.fitHeight,
-                        );
-                      } else {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                    },
-                  )
+              // child: Hero(
+              //     tag: int.parse(id),
+              //     child: FutureBuilder<String>(
+              //       future: fetchImage(id),
+              //       builder: (context, snapshot) {
+              //         if (snapshot.connectionState == ConnectionState.done) {
+              //           return CachedNetworkImage(
+              //             height: 200,
+              //             imageUrl: snapshot.data!,
+              //             errorWidget: (context, url, error) =>
+              //                 Icon(Icons.error),
+              //             fit: BoxFit.fitHeight,
+              //           );
+              //         } else {
+              //           return Center(child: CircularProgressIndicator());
+              //         }
+              //       },
+              //     )
+              // )
+              child: FutureBuilder<String>(
+                future: fetchImage(id),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return CachedNetworkImage(
+                      height: 200,
+                      imageUrl: snapshot.data!,
+                      errorWidget: (context, url, error) =>
+                          Icon(Icons.error),
+                      fit: BoxFit.fitHeight,
+                    );
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                },
               )
           )
 
@@ -304,6 +326,30 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     return encoder.convert(json);
   }
 
+  Color getColorByType(String type) {
+    const Map<String, Color> colours = {
+      'normal': const Color(0xFFA8A77A),
+      'fire': const Color(0xFFEE8130),
+      'water': const Color(0xFF6390F0),
+      'electric': const Color(0xFFF7D02C),
+      'grass': const Color(0xFF7AC74C),
+      'ice': const Color(0xFF96D9D6),
+      'fighting': const Color(0xFFC22E28),
+      'poison': const Color(0xFFA33EA1),
+      'ground': const Color(0xFFE2BF65),
+      'flying': const Color(0xFFA98FF3),
+      'psychic': const Color(0xFFF95587),
+      'bug': const Color(0xFFA6B91A),
+      'rock': const Color(0xFFB6A136),
+      'ghost': const Color(0xFF735797),
+      'dragon': const Color(0xFF6F35FC),
+      'dark': const Color(0xFF705746),
+      'steel': const Color(0xFFB7B7CE),
+      'fairy': const Color(0xFFD685AD),
+    };
+    Color TypeCode = colours[type.toLowerCase()]?? Colors.grey;
+    return TypeCode;
+  }
 
   Future<String> fetchImage( String id) async {
     String url = 'https://pokeapi.co/api/v2/pokemon/'+id;

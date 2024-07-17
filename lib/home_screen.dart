@@ -46,7 +46,10 @@ class _HomeScreenState extends State<HomeScreen> {
             top: 150,
             bottom: 0,
             width: width,
-            child: Column(
+            child: Scrollbar(
+              trackVisibility: true,
+              thickness: 5.0,
+              child: Column(
               children: [
                 pokedex != null ? Expanded(
                     child: GridView.builder(
@@ -74,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+          ),
         ],
       ),
     );
@@ -95,36 +99,32 @@ class _HomeScreenState extends State<HomeScreen> {
     return json.decode(jsonString);
   }
 
-  Color getColorByType(String? type) {
-    switch (type) {
-      case 'Grass':
-        return Colors.greenAccent;
-      case 'Fire':
-        return Colors.redAccent;
-      case 'Water':
-        return Colors.blue;
-      case 'Electric':
-        return Colors.yellow;
-      case 'Rock':
-        return Colors.grey;
-      case 'Ground':
-        return Colors.brown;
-      case 'Psychic':
-        return Colors.indigo;
-      case 'Fighting':
-        return Colors.orange;
-      case 'Bug':
-        return Colors.lightGreenAccent;
-      case 'Ghost':
-        return Colors.deepPurple;
-      case 'Normal':
-        return Colors.blueGrey;
-      case 'Poison':
-        return Colors.deepPurpleAccent;
-      default:
-        return Colors.pinkAccent;
-    }
+  Color getColorByType(String type) {
+    const Map<String, Color> colours = {
+      'normal': const Color(0xFFA8A77A),
+      'fire': const Color(0xFFEE8130),
+      'water': const Color(0xFF6390F0),
+      'electric': const Color(0xFFF7D02C),
+      'grass': const Color(0xFF7AC74C),
+      'ice': const Color(0xFF96D9D6),
+      'fighting': const Color(0xFFC22E28),
+      'poison': const Color(0xFFA33EA1),
+      'ground': const Color(0xFFE2BF65),
+      'flying': const Color(0xFFA98FF3),
+      'psychic': const Color(0xFFF95587),
+      'bug': const Color(0xFFA6B91A),
+      'rock': const Color(0xFFB6A136),
+      'ghost': const Color(0xFF735797),
+      'dragon': const Color(0xFF6F35FC),
+      'dark': const Color(0xFF705746),
+      'steel': const Color(0xFFB7B7CE),
+      'fairy': const Color(0xFFD685AD),
+    };
+
+    Color TypeCode = colours[type.toLowerCase()]?? Colors.grey;
+    return TypeCode;
   }
+
 
   Future<Widget> getPokemonWidget(int index) async {
     var pokemonData = await fetchPokemonDetail(index);
@@ -154,17 +154,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget buildPokemonWidget(dynamic pokemonData) {
     // Extract necessary data from pokemonData and return the Widget
     var pokemon = parseJson(prettyJson(pokemonData));
-    String type = pokemon['types'][0]['type']['name'].toString().capitalize();
-    String Pokename = pokemon['name'].toString().capitalize();
+    var typeNames = pokemon['types'].map((item) => item['type']['name']).toList();
+    String type1 = typeNames.first.toString().capitalize();
+    String type2 = typeNames.last.toString().capitalize();
+    String type = typeNames.join(',\n').toString().capitalizeEach();
     String id = pokemon['id'].toString();
+    String Pokename = "#${id} ${pokemon['name'].toString().capitalize()}";
     return InkWell(
         child: Padding(
             padding: const EdgeInsets.symmetric(
                 vertical: 8.0, horizontal: 12),
             child: Container(
               decoration: BoxDecoration(
-                // color: getColorByType(type),
-                color: getColorByType(type),
+                color: getColorByType(type1).withOpacity(0.85),
                 borderRadius: const BorderRadius.all(Radius.circular(20)),
               ),
               child: Stack(
@@ -178,8 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           fit: BoxFit.fitHeight)
                   ),
                   Positioned(
-                      bottom: -5,
-                      right: -10,
+                      bottom: 0,
+                      right: 0,
                       // child: Hero(
                       //   tag: int.parse(id),
                       //     child: FutureBuilder<String>(
@@ -204,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.done) {
                           return CachedNetworkImage(
-                            height: 110,
+                            height: 90,
                             imageUrl: snapshot.data!,
                             errorWidget: (context, url, error) =>
                                 Icon(Icons.error),
@@ -214,27 +216,26 @@ class _HomeScreenState extends State<HomeScreen> {
                           return Center(child: CircularProgressIndicator());
                         }
                       },
-                    )
-
-                    ,
+                    ),
                   ),
                   Positioned(
                     top: 50,
                     left: 10,
                     child: Container(
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(
-                            Radius.circular(10)),
-                        color: Colors.black38,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        gradient: LinearGradient(
+                          colors: [getColorByType(type1), getColorByType(type2)],
+                          transform: GradientRotation(1.0),
+                          stops: [0.50,0.50],
+                        ),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4, right: 4,
                             top: 1, bottom: 1),
-                        child: Text(
-                          type,
-                          style: const TextStyle(
-                            color: Colors.white,
-                          ),
+                        child: Text(type,
+                          style: const TextStyle(color: Colors.white,
+                            fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                     ),
