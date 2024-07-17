@@ -9,7 +9,7 @@ class PokemonDetailScreen extends StatefulWidget {
  final Color color;
  // final int heroTag;
 
-  const PokemonDetailScreen({super.key, this.pokemonDetail, required this.color});
+  const PokemonDetailScreen({super.key, this.pokemonDetail, required this.color});  //, required this.heroTag});
 
   @override
   _PokemonDetailScreenState createState() => _PokemonDetailScreenState();
@@ -27,7 +27,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     String name = pokemon['name'].toString().capitalize();
     String PokeHeight = "${(pokemon['height'] / 10).toString()} m";
     String PokeWeight = "${(pokemon['weight'] / 10).toString()} Kg";
-    print(prettyJson(pokemon));
+    // print(prettyJson(pokemon));
 
     return Scaffold(
       backgroundColor: widget.color,
@@ -268,24 +268,40 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           Positioned(
               top: height * 0.20,
               left: (width/2)-100,
-              child: Hero(
-                  tag: int.parse(id),
-                  child: FutureBuilder<String>(
-                    future: fetchImage(id),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return CachedNetworkImage(
-                          height: 200,
-                          imageUrl: snapshot.data!,
-                          errorWidget: (context, url, error) =>
-                              Icon(Icons.error),
-                          fit: BoxFit.fitHeight,
-                        );
-                      } else {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                    },
-                  )
+              // child: Hero(
+              //     tag: int.parse(id),
+              //     child: FutureBuilder<String>(
+              //       future: fetchImage(id),
+              //       builder: (context, snapshot) {
+              //         if (snapshot.connectionState == ConnectionState.done) {
+              //           return CachedNetworkImage(
+              //             height: 200,
+              //             imageUrl: snapshot.data!,
+              //             errorWidget: (context, url, error) =>
+              //                 Icon(Icons.error),
+              //             fit: BoxFit.fitHeight,
+              //           );
+              //         } else {
+              //           return Center(child: CircularProgressIndicator());
+              //         }
+              //       },
+              //     )
+              // )
+              child: FutureBuilder<String>(
+                future: fetchImage(id),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return CachedNetworkImage(
+                      height: 200,
+                      imageUrl: snapshot.data!,
+                      errorWidget: (context, url, error) =>
+                          Icon(Icons.error),
+                      fit: BoxFit.fitHeight,
+                    );
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                },
               )
           )
 

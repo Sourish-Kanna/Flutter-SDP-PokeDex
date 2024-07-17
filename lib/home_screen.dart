@@ -46,7 +46,10 @@ class _HomeScreenState extends State<HomeScreen> {
             top: 150,
             bottom: 0,
             width: width,
-            child: Column(
+            child: Scrollbar(
+              trackVisibility: true,
+              thickness: 10.0,
+              child: Column(
               children: [
                 pokedex != null ? Expanded(
                     child: GridView.builder(
@@ -73,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               ],
             ),
+          ),
           ),
         ],
       ),
@@ -178,8 +182,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           fit: BoxFit.fitHeight)
                   ),
                   Positioned(
-                      bottom: -5,
-                      right: -10,
+                      bottom: 0,
+                      right: 0,
                       // child: Hero(
                       //   tag: int.parse(id),
                       //     child: FutureBuilder<String>(
@@ -214,9 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           return Center(child: CircularProgressIndicator());
                         }
                       },
-                    )
-
-                    ,
+                    ),
                   ),
                   Positioned(
                     top: 50,
