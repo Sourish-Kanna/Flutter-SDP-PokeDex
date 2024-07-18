@@ -25,7 +25,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     var typeNames = pokemon['types'].map((item) => item['type']['name']).toList();
     String type1 = typeNames.first.toString().capitalize();
     String type2 = typeNames.last.toString().capitalize();
-    String type = typeNames.join(', ').toString().capitalizeEach();
+    String type = typeNames.join(' | ').toString().capitalizeEach();
     String id = pokemon['id'].toString();
     String name = pokemon['name'].toString().capitalize();
     String PokeHeight = "${(pokemon['height'] / 10).toString()} m";
@@ -49,8 +49,8 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               left: 20,
               child: Text(name,style: TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold,
-                fontSize: 30,
-              ),)),
+                fontSize: 30, ),)
+          ),
 
           Positioned(
             top: 140,
@@ -74,9 +74,10 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           ),
 
           Positioned(
-            top: height * 0.18,
-            right: -120,
-            child: Image.asset("images/pokeball.png", height: 250, fit: BoxFit.fitHeight,),
+            top: height * 0.15,
+            right: -20,
+            child: Image.asset("images/pokeball.png", height: 275,
+              fit: BoxFit.fitHeight,),
           ),
 
           Positioned(
