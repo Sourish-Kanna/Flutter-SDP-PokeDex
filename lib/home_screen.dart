@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
     var typeNames = pokemon['types'].map((item) => item['type']['name']).toList();
     String type1 = typeNames.first.toString().capitalize();
     String type2 = typeNames.last.toString().capitalize();
-    String type = typeNames.join(',\n').toString().capitalizeEach();
+    String type = typeNames.join('\n').toString().capitalizeEach();
     String id = pokemon['id'].toString();
     String Pokename = "#${id} ${pokemon['name'].toString().capitalize()}";
     return InkWell(
@@ -231,8 +231,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 4, right: 4,
-                            top: 1, bottom: 1),
+                        padding: typeNames.length==2 ?
+                        const EdgeInsets.only(left: 5, right: 5, top: 2, bottom: 2) :
+                        const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
                         child: Text(type,
                           style: const TextStyle(color: Colors.white,
                             fontWeight: FontWeight.bold, fontSize: 12),
