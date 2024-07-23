@@ -14,6 +14,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> pokedex = [];
+  String searchQuery = '';
+  List<dynamic> filteredPokedex = [];
   @override
   void initState() {
     super.initState();
@@ -22,9 +24,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
-    // var height = MediaQuery.of(context).size.height;
     return Scaffold(
       body: Stack(
         children: [
@@ -35,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
               'images/pokeball.png', width: 400, fit: BoxFit.fitWidth,),
           ),
           Positioned(
-              top: 100,
+              top: 80,
               left: 20,
               child: Text("Pokedex",
                 style: TextStyle(fontSize: 40,
@@ -44,51 +46,80 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Positioned(
             top: 150,
+            left: 20,
+            right: 120,
+            child: TextField(
+              decoration: InputDecoration(
+                labelText: 'Search Pokémon',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (query) => filterPokemon(query),
+            ),
+          ),
+          Positioned(
+            top: 200,
             bottom: 0,
             width: width,
             child: Scrollbar(
               trackVisibility: true,
               thickness: 5.0,
               child: Column(
-              children: [
-                pokedex != null ? Expanded(
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 1.4,
-                      ),
-                      itemCount: pokedex.length,
-                      itemBuilder: (context, index) {
-                        return FutureBuilder(
-                          future: getPokemonWidget(index),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.done) {
-                              return snapshot.data!;
-                            } else {
-                              return CircularProgressIndicator();
-                            }
-                          },
-                        );
-                      },
-                    )
-                ) : Center(
-                  child: CircularProgressIndicator(),
-                )
-              ],
+                children: [
+                  filteredPokedex != null ? Expanded(
+                      child: GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.4,
+                        ),
+                        itemCount: filteredPokedex.length,
+                        itemBuilder: (context, index) {
+                          return FutureBuilder(
+                            future: getPokemonWidget(index),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.done) {
+                                return snapshot.data!;
+                              } else {
+                                return CircularProgressIndicator();
+                              }
+                            },
+                          );
+                        },
+                      )
+                  ) : Center(
+                    child: CircularProgressIndicator(),
+                  )
+                ],
+              ),
             ),
-          ),
           ),
         ],
       ),
     );
   }
 
+
   void fetchPokemonData() {
     Pokedex().pokemon.getAll().then((response) {
-      pokedex = response.results;
-      setState(() {});
+      setState(() {
+        pokedex = response.results;
+        filteredPokedex = pokedex;
+      });
     });
   }
+
+  void filterPokemon(String query) {
+    setState(() {
+      searchQuery = query;
+      if (query.isEmpty) {
+        filteredPokedex = pokedex;
+      } else {
+        filteredPokedex = pokedex.where((pokemon) {
+          return pokemon.name.toLowerCase().contains(query.toLowerCase());
+        }).toList();
+      }
+    });
+  }
+
 
   String prettyJson(dynamic json) {
     const encoder = JsonEncoder.withIndent('  ');
@@ -125,15 +156,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return TypeCode;
   }
 
-
   Future<Widget> getPokemonWidget(int index) async {
-    var pokemonData = await fetchPokemonDetail(index);
+    var pokemonData = await fetchPokemonDetail(filteredPokedex[index].name);
     return buildPokemonWidget(pokemonData);
   }
 
-  Future<dynamic> fetchPokemonDetail(int index) async {
-    var pokemonName = pokedex[index].name;
-    var response = await Pokedex().pokemon.get(name: pokemonName);
+  Future<dynamic> fetchPokemonDetail(String name) async {
+    var response = await Pokedex().pokemon.get(name: name);
     return response;
   }
 
