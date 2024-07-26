@@ -61,6 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   flex: 3,
                   child: TextField(
                     controller: _searchController,
+                    onSubmitted: (query) {
+                      _performSearch();
+                    },
                     decoration: const InputDecoration(
                       labelText: 'Pokémon Name/Id',
                       border: OutlineInputBorder(
@@ -120,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (snapshot.connectionState == ConnectionState.done) {
                                 return snapshot.data!;
                               } else {
-                                return const CircularProgressIndicator();
+                                return Center(child: const CircularProgressIndicator());
                               }
                             },
                           );
@@ -162,20 +165,29 @@ class _HomeScreenState extends State<HomeScreen> {
   void filterPokemon(String query) {
     setState(() {
       searchQuery = query;
+
       if (query.isEmpty) {
         filteredPokedex = pokedex;
+      } else if (isInteger(query)) {
+        // Parse the query to integer
+        int id = int.parse(query);
+
+        // Create a list of indices to search in the pokedex
+        List<int> indicesWithDigit = findNumbersContainingDigit(
+            List.generate(pokedex.length, (index) => index + 1),
+            id
+        );
+
+        // Filter pokedex using the indices
+        filteredPokedex = pokedex.where((pokemon) =>
+            indicesWithDigit.contains(pokedex.indexOf(pokemon) + 1)
+        ).toList();
+
       } else {
-        if (isInteger(query)) {
-          int id = int.parse(query);
-          List<int> numbers = List.generate(pokedex.length, (index) => index);;
-          int digitToFind = id;
-          List<int> result = findNumbersContainingDigit(numbers, digitToFind);
-          filteredPokedex = result.map((index) => pokedex[index-1]).toList();
-        } else {
-          filteredPokedex = pokedex.where((pokemon) {
-            return pokemon.name.toLowerCase().contains(query.toLowerCase());
-          }).toList();
-        }
+        // Filter by name if query is not an integer
+        filteredPokedex = pokedex.where((pokemon) =>
+            pokemon.name.toLowerCase().contains(query.toLowerCase())
+        ).toList();
       }
     });
   }
@@ -215,11 +227,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return typeColour;
   }
 
-  Future<Widget> getPokemonWidget(int index) async {
-    var pokemonData = await fetchPokemonDetail(filteredPokedex[index].name);
-    return buildPokemonWidget(pokemonData);
-  }
-
   Future<dynamic> fetchPokemonDetail(String name) async {
     var response = await Pokedex().pokemon.get(name: name);
     return response;
@@ -237,6 +244,11 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       return(response.statusCode.toString());
     }
+  }
+
+  Future<Widget> getPokemonWidget(int index) async {
+    var pokemonData = await fetchPokemonDetail(filteredPokedex[index].name);
+    return buildPokemonWidget(pokemonData);
   }
 
   Widget buildPokemonWidget(dynamic pokemonData) {
