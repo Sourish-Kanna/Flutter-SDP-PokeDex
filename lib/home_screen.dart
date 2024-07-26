@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -8,6 +9,8 @@ import 'package:pokedex/pokedex.dart';
 import 'package:string_capitalize/string_capitalize.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -16,6 +19,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> pokedex = [];
   String searchQuery = '';
   List<dynamic> filteredPokedex = [];
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -36,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Image.asset(
               'images/pokeball.png', width: 400, fit: BoxFit.fitWidth,),
           ),
-          Positioned(
+          const Positioned(
               top: 80,
               left: 20,
               child: Text("Pokedex",
@@ -46,15 +51,51 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Positioned(
             top: 150,
-            left: 20,
-            right: 120,
-            child: TextField(
-              decoration: InputDecoration(
-                labelText: 'Search Pokémon',
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (query) => filterPokemon(query),
-            ),
+            left: 10,
+            right: 5,
+            child: Padding(
+                padding: const EdgeInsets.all(5),
+                child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      labelText: 'Pokémon Name/Id',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                      ),
+                      // prefixIcon: Icon(Icons.search),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 1,
+                  child: ElevatedButton(
+                    onPressed: _performSearch,
+                    child: const Icon(Icons.search,
+                      color: Colors.blue,),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 1,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Widget detailScreen = await randomPokemon();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => detailScreen),
+                      );
+                    },
+                    child: const Icon(Icons.explore_outlined,
+                      color: Colors.blue,),
+                  ),
+                )
+              ],
+            )),
           ),
           Positioned(
             top: 200,
@@ -65,9 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
               thickness: 5.0,
               child: Column(
                 children: [
-                  filteredPokedex != null ? Expanded(
+                  Expanded(
                       child: GridView.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           childAspectRatio: 1.4,
                         ),
@@ -79,14 +120,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (snapshot.connectionState == ConnectionState.done) {
                                 return snapshot.data!;
                               } else {
-                                return CircularProgressIndicator();
+                                return const CircularProgressIndicator();
                               }
                             },
                           );
                         },
                       )
-                  ) : Center(
-                    child: CircularProgressIndicator(),
                   )
                 ],
               ),
@@ -97,14 +136,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   void fetchPokemonData() {
-    Pokedex().pokemon.getAll().then((response) {
-      setState(() {
-        pokedex = response.results;
-        filteredPokedex = pokedex;
+      Pokedex().pokemon.getAll().then((response) {
+        setState(() {
+          pokedex = response.results;
+          filteredPokedex = pokedex;
+        });
       });
-    });
+  }
+
+  void _performSearch() {
+    FocusScope.of(context).unfocus();
+    final query = _searchController.text;
+    filterPokemon(query); // Replace this with your actual search function
+  }
+
+  bool isInteger(String str) {
+    return int.tryParse(str) != null;
+  }
+
+  List<int> findNumbersContainingDigit(List<int> numbers, int digit) {
+    return numbers.where((number) => number.toString().contains(digit.toString())).toList();
   }
 
   void filterPokemon(String query) {
@@ -113,13 +165,20 @@ class _HomeScreenState extends State<HomeScreen> {
       if (query.isEmpty) {
         filteredPokedex = pokedex;
       } else {
-        filteredPokedex = pokedex.where((pokemon) {
-          return pokemon.name.toLowerCase().contains(query.toLowerCase());
-        }).toList();
+        if (isInteger(query)) {
+          int id = int.parse(query);
+          List<int> numbers = List.generate(pokedex.length, (index) => index);;
+          int digitToFind = id;
+          List<int> result = findNumbersContainingDigit(numbers, digitToFind);
+          filteredPokedex = result.map((index) => pokedex[index-1]).toList();
+        } else {
+          filteredPokedex = pokedex.where((pokemon) {
+            return pokemon.name.toLowerCase().contains(query.toLowerCase());
+          }).toList();
+        }
       }
     });
   }
-
 
   String prettyJson(dynamic json) {
     const encoder = JsonEncoder.withIndent('  ');
@@ -132,28 +191,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Color getColorByType(String type) {
     const Map<String, Color> colours = {
-      'normal': const Color(0xFFA8A77A),
-      'fire': const Color(0xFFEE8130),
-      'water': const Color(0xFF6390F0),
-      'electric': const Color(0xFFF7D02C),
-      'grass': const Color(0xFF7AC74C),
-      'ice': const Color(0xFF96D9D6),
-      'fighting': const Color(0xFFC22E28),
-      'poison': const Color(0xFFA33EA1),
-      'ground': const Color(0xFFE2BF65),
-      'flying': const Color(0xFFA98FF3),
-      'psychic': const Color(0xFFF95587),
-      'bug': const Color(0xFFA6B91A),
-      'rock': const Color(0xFFB6A136),
-      'ghost': const Color(0xFF735797),
-      'dragon': const Color(0xFF6F35FC),
-      'dark': const Color(0xFF705746),
-      'steel': const Color(0xFFB7B7CE),
-      'fairy': const Color(0xFFD685AD),
+      'normal': Color(0xFFA8A77A),
+      'fire': Color(0xFFEE8130),
+      'water': Color(0xFF6390F0),
+      'electric': Color(0xFFF7D02C),
+      'grass': Color(0xFF7AC74C),
+      'ice': Color(0xFF96D9D6),
+      'fighting': Color(0xFFC22E28),
+      'poison': Color(0xFFA33EA1),
+      'ground': Color(0xFFE2BF65),
+      'flying': Color(0xFFA98FF3),
+      'psychic': Color(0xFFF95587),
+      'bug': Color(0xFFA6B91A),
+      'rock': Color(0xFFB6A136),
+      'ghost': Color(0xFF735797),
+      'dragon': Color(0xFF6F35FC),
+      'dark': Color(0xFF705746),
+      'steel': Color(0xFFB7B7CE),
+      'fairy': Color(0xFFD685AD),
     };
 
-    Color TypeCode = colours[type.toLowerCase()]?? Colors.grey;
-    return TypeCode;
+    Color typeColour = colours[type.toLowerCase()]?? Colors.grey;
+    return typeColour;
   }
 
   Future<Widget> getPokemonWidget(int index) async {
@@ -167,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<String> fetchImage( String id) async {
-    String url = 'https://pokeapi.co/api/v2/pokemon/'+id;
+    String url = 'https://pokeapi.co/api/v2/pokemon/$id';
     // Make GET request
     http.Response response = await http.get(Uri.parse(url));
 
@@ -188,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String type2 = typeNames.last.toString().capitalize();
     String type = typeNames.join('\n').toString().capitalizeEach();
     String id = pokemon['id'].toString();
-    String Pokename = "#${id} ${pokemon['name'].toString().capitalize()}";
+    String pokeName = "#$id ${pokemon['name'].toString().capitalize()}";
     return InkWell(
         child: Padding(
             padding: const EdgeInsets.symmetric(
@@ -238,11 +297,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 90,
                             imageUrl: snapshot.data!,
                             errorWidget: (context, url, error) =>
-                                Icon(Icons.error),
+                                const Icon(Icons.error),
                             fit: BoxFit.fitHeight,
                           );
                         } else {
-                          return Center(child: CircularProgressIndicator());
+                          return const Center(child: CircularProgressIndicator());
                         }
                       },
                     ),
@@ -255,8 +314,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(10),
                         gradient: LinearGradient(
                           colors: [getColorByType(type1), getColorByType(type2)],
-                          transform: GradientRotation(1.0),
-                          stops: [0.50,0.50],
+                          transform: const GradientRotation(1.0),
+                          stops: const [0.50,0.50],
                         ),
                       ),
                       child: Padding(
@@ -283,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.only(left: 4, right: 4,
                             top: 1, bottom: 1),
                         child: Text(
-                          Pokename,
+                          pokeName,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18,
                             color: Colors.white,
@@ -297,6 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
             )
         ),
         onTap: () {
+          FocusScope.of(context).unfocus();
           Navigator.push(
             context, MaterialPageRoute(builder: (_) =>
             PokemonDetailScreen(
@@ -310,4 +370,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<Widget> randomPokemon() async {
+    Random random = Random();
+    int randomInt = random.nextInt(pokedex.length);
+    var pokemonData = await fetchPokemonDetail(pokedex[randomInt].name);
+    var pokemon = parseJson(prettyJson(pokemonData));
+    String type = pokemon['types'].map((item) => item['type']['name'])
+        .toList().join('\n').toString().capitalizeEach();
+    return PokemonDetailScreen(
+      pokemonDetail: pokemon,
+      color: getColorByType(type),
+    );
+  }
 }
