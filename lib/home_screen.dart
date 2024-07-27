@@ -101,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
             )),
           ),
           Positioned(
-            top: 200,
+            top: 215,
             bottom: 0,
             width: width,
             child: Scrollbar(
@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: GridView.builder(
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 1.4,
+                          childAspectRatio: 1.6,
                         ),
                         itemCount: filteredPokedex.length,
                         itemBuilder: (context, index) {
@@ -123,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (snapshot.connectionState == ConnectionState.done) {
                                 return snapshot.data!;
                               } else {
-                                return Center(child: const CircularProgressIndicator());
+                                return const Center(child: CircularProgressIndicator());
                               }
                             },
                           );
@@ -227,11 +227,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return typeColour;
   }
 
-  Future<dynamic> fetchPokemonDetail(String name) async {
-    var response = await Pokedex().pokemon.get(name: name);
-    return response;
-  }
-
   Future<String> fetchImage( String id) async {
     String url = 'https://pokeapi.co/api/v2/pokemon/$id';
     // Make GET request
@@ -244,6 +239,24 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       return(response.statusCode.toString());
     }
+  }
+
+  Future<Widget> randomPokemon() async {
+    Random random = Random();
+    int randomInt = random.nextInt(pokedex.length);
+    var pokemonData = await fetchPokemonDetail(pokedex[randomInt].name);
+    var pokemon = parseJson(prettyJson(pokemonData));
+    String type = pokemon['types'].map((item) => item['type']['name'])
+        .toList().join('\n').toString().capitalizeEach();
+    return PokemonDetailScreen(
+      pokemonDetail: pokemon,
+      color: getColorByType(type),
+    );
+  }
+
+  Future<dynamic> fetchPokemonDetail(String name) async {
+    var response = await Pokedex().pokemon.get(name: name);
+    return response;
   }
 
   Future<Widget> getPokemonWidget(int index) async {
@@ -379,19 +392,6 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           );
         }
-    );
-  }
-
-  Future<Widget> randomPokemon() async {
-    Random random = Random();
-    int randomInt = random.nextInt(pokedex.length);
-    var pokemonData = await fetchPokemonDetail(pokedex[randomInt].name);
-    var pokemon = parseJson(prettyJson(pokemonData));
-    String type = pokemon['types'].map((item) => item['type']['name'])
-        .toList().join('\n').toString().capitalizeEach();
-    return PokemonDetailScreen(
-      pokemonDetail: pokemon,
-      color: getColorByType(type),
     );
   }
 }
