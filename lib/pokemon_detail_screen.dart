@@ -5,13 +5,11 @@ import 'package:pokedex/pokedex.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-
 class PokemonDetailScreen extends StatefulWidget {
- final dynamic pokemonDetail;
- final Color color;
- // final int heroTag;
+  final dynamic pokemonDetail;
+  final Color color;
 
-  const PokemonDetailScreen({super.key, this.pokemonDetail, required this.color});  //, required this.heroTag});
+  const PokemonDetailScreen({super.key, this.pokemonDetail, required this.color});
 
   @override
   _PokemonDetailScreenState createState() => _PokemonDetailScreenState();
@@ -43,7 +41,6 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     String move3 = "${Moves[2]["move"]["name"]}".split("-").join(" ").capitalizeEach();
     String move4 = "${Moves[3]["move"]["name"]}".split("-").join(" ").capitalizeEach();
 
-
     return Scaffold(
       backgroundColor: getColorByType(type1).withOpacity(0.75),
       body: Stack(
@@ -52,47 +49,58 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           Positioned(
             top: height * 0.15,
             left: -45,
-            child: Image.asset("images/pokeball.png", height: 275,
-              fit: BoxFit.fitHeight,),
+            child: Image.asset(
+              "images/pokeball.png",
+              height: 275,
+              fit: BoxFit.fitHeight,
+            ),
           ),
-
           Positioned(
             top: 30,
             left: 5,
-            child: IconButton( icon: const Icon(Icons.arrow_back, color: Colors.white,
-              size: 30,),onPressed: (){ Navigator.pop(context);
-            }),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
           ),
-
           Positioned(
             top: 90,
-              left: 20,
-              child: Text(name,style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold,
-                fontSize: 30, ),)
+            left: 20,
+            child: Text(
+              name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 30,
+              ),
+            ),
           ),
-
           Positioned(
             top: 140,
-              left: 20,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  gradient: LinearGradient(
-                    colors: [getColorByType(type1), getColorByType(type2)],
-                    transform: const GradientRotation(1.0),
-                    stops: const [0.50,0.50],
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 8.0, right: 8.0,
-                      top: 4.0,bottom: 4.0),
-                  child: Text(type,style: const TextStyle(color: Colors.white,
-                      fontWeight: FontWeight.bold, ),),
+            left: 20,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                gradient: LinearGradient(
+                  colors: [getColorByType(type1), getColorByType(type2)],
+                  transform: const GradientRotation(1.0),
+                  stops: const [0.50, 0.50],
                 ),
               ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 4.0, bottom: 4.0),
+                child: Text(
+                  type,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
           ),
-
           Positioned(
             bottom: 0,
             child: Container(
@@ -102,14 +110,13 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                 borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(20)),
                 color: Colors.white,
               ),
-
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 40,),
-
+                      const SizedBox(height: 40),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 5),
                         child: Row(
@@ -201,6 +208,37 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                             Text(pokeAbility, style: const TextStyle(
                                 color: Colors.black, fontSize: 18
                             ),),
+                          ],
+                        ),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children:[
+                            SizedBox(
+                              width: width * 0.3,
+                              child: const Text("Evolves",
+                                style: TextStyle(
+                                    color: Colors.blueGrey, fontSize: 18,
+                                    fontWeight: FontWeight.bold
+                                ),),
+                            ),
+                            FutureBuilder(
+                              future: getPokemonWidget(pokemon['id']),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.done) {
+                                  if (snapshot.hasData) {
+                                    return snapshot.data!;
+                                  } else {
+                                    return const Center(child: Text("No data found"));
+                                  }
+                                } else {
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+                              },
+                            ),
                           ],
                         ),
                       ),
@@ -310,68 +348,37 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                           ],
                         ),
                       ),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: FutureBuilder(
-                            future: getPokemonWidget(pokemon['id']),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done) {
-                            return snapshot.data!;
-                          } else {
-                            return const Center(child: CircularProgressIndicator());
-                          }
-                        },
-                      ))
                     ],
+                  ),
                 ),
               ),
-              ),
             ),
-
+          ),
           Positioned(
-              top: height * 0.20,
-              left: (width/2)-100,
-              // child: Hero(
-              //     tag: int.parse(id),
-              //     child: FutureBuilder<String>(
-              //       future: fetchImage(id),
-              //       builder: (context, snapshot) {
-              //         if (snapshot.connectionState == ConnectionState.done) {
-              //           return CachedNetworkImage(
-              //             height: 200,
-              //             imageUrl: snapshot.data!,
-              //             errorWidget: (context, url, error) =>
-              //                 Icon(Icons.error),
-              //             fit: BoxFit.fitHeight,
-              //           );
-              //         } else {
-              //           return Center(child: CircularProgressIndicator());
-              //         }
-              //       },
-              //     )
-              // )
-              child: FutureBuilder<String>(
-                future: fetchImage(id),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
+            top: height * 0.20,
+            left: (width / 2) - 100,
+            child: FutureBuilder<String>(
+              future: fetchImage(id),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (snapshot.hasData) {
                     return CachedNetworkImage(
                       height: 200,
                       imageUrl: snapshot.data!,
-                      errorWidget: (context, url, error) =>
-                      const Icon(Icons.error),
+                      errorWidget: (context, url, error) => const Icon(Icons.error),
                       fit: BoxFit.fitHeight,
                     );
                   } else {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(child: Text("No image found"));
                   }
-                },
-              )
-          )
-
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
+          ),
         ],
       ),
-
     );
   }
 
@@ -406,21 +413,17 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
       'fairy': Color(0xFFD685AD),
     };
 
-    Color typeColour = colours[type.toLowerCase()]?? Colors.grey;
-    return typeColour;
+    return colours[type.toLowerCase()] ?? Colors.grey;
   }
 
-  Future<String> fetchImage( String id) async {
+  Future<String> fetchImage(String id) async {
     String url = 'https://pokeapi.co/api/v2/pokemon/$id';
-    // Make GET request
     http.Response response = await http.get(Uri.parse(url));
 
-    // Check if the request was successful
     if (response.statusCode == 200) {
-      // Successful response
-      return(parseJson(response.body)['sprites']['other']['official-artwork']['front_default'].toString());
+      return parseJson(response.body)['sprites']['other']['official-artwork']['front_default'].toString();
     } else {
-      return(response.statusCode.toString());
+      return response.statusCode.toString();
     }
   }
 
@@ -429,36 +432,35 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     return response;
   }
 
-  Future<Widget> getPokemonWidget(int index) async {
-    var pokemonData = await fetchPokemonEvolution(index);
-    return buildPokemonWidget(pokemonData);
+  Future<dynamic> fetchPokemonDetail(int index) async {
+    var response = await Pokedex().pokemon.get(id: index);
+    return response;
   }
 
-  Widget buildPokemonWidget(dynamic pokemonData) {
-    var pokemon = parseJson(prettyJson(pokemonData));
-    var typeNames = pokemon['types'].map((item) => item['type']['name']).toList();
-    String id = pokemon['id'].toString();
-    String pokeName = "#$id ${pokemon['name'].toString().capitalize()}";
-    String type = typeNames.join('\n').toString().capitalizeEach();
-    return InkWell(
-        child: Text(pokeName,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold, fontSize: 18,
-            color: Colors.white,
-          ),
-        ),
-        onTap: () {
-          FocusScope.of(context).unfocus();
-          Navigator.push(
-              context, MaterialPageRoute(builder: (_) =>
-              PokemonDetailScreen(
-                pokemonDetail: pokemon,
-                color: getColorByType(type),
-                // heroTag: int.parse(id),
-              )
-          )
-          );
-        }
+  Future<Widget> getPokemonWidget(int index) async {
+    var pokemonEvoData = await fetchPokemonEvolution(index);
+    var pokemon = parseJson(prettyJson(pokemonEvoData));
+    String newPoke = pokemon['chain']['evolves_to'].first['species']['url'].toString().split('/').reversed.elementAt(1);
+    // print(prettyJson(pokemon));
+    // print(newPoke);
+    var pokemonData = await fetchPokemonDetail(int.parse(newPoke));
+    var pokemon1 = parseJson(prettyJson(pokemonData));
+    print(prettyJson(pokemon1));
+    // print(newPoke);
+    return buildPokemonWidget(pokemonEvoData,pokemonData);
+  }
+
+  Widget buildPokemonWidget(dynamic pokemonEvoData, dynamic pokemonData) {
+    var pokemon = parseJson(prettyJson(pokemonEvoData));
+    var pokemon1 = parseJson(prettyJson(pokemonData));
+    // print(prettyJson(pokemon));
+    String id = (pokemon1['id']).toString();
+    String pokeName = "#$id ${pokemon['chain']['evolves_to'].first['species']['name'].toString().capitalize()}";
+    var typeNames = pokemon1['types'].map((item) => item['type']['name']).toList();
+
+    return Text(
+      pokeName,
+      style: const TextStyle(color: Colors.black, fontSize: 18),
     );
   }
 }
