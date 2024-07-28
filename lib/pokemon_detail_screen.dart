@@ -445,7 +445,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     // print(newPoke);
     var pokemonData = await fetchPokemonDetail(int.parse(newPoke));
     var pokemon1 = parseJson(prettyJson(pokemonData));
-    print(prettyJson(pokemon1));
+    // print(prettyJson(pokemon1));
     // print(newPoke);
     return buildPokemonWidget(pokemonEvoData,pokemonData);
   }
