@@ -441,12 +441,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     var pokemonEvoData = await fetchPokemonEvolution(index);
     var pokemon = parseJson(prettyJson(pokemonEvoData));
     String newPoke = pokemon['chain']['evolves_to'].first['species']['url'].toString().split('/').reversed.elementAt(1);
-    // print(prettyJson(pokemon));
-    // print(newPoke);
     var pokemonData = await fetchPokemonDetail(int.parse(newPoke));
-    var pokemon1 = parseJson(prettyJson(pokemonData));
-    // print(prettyJson(pokemon1));
-    // print(newPoke);
     return buildPokemonWidget(pokemonEvoData,pokemonData);
   }
 
