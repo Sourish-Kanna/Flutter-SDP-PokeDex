@@ -456,7 +456,6 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     // print(prettyJson(pokemon));
     String id = (pokemon1['id']).toString();
     String pokeName = "#$id ${pokemon['chain']['evolves_to'].first['species']['name'].toString().capitalize()}";
-    var typeNames = pokemon1['types'].map((item) => item['type']['name']).toList();
 
     return Text(
       pokeName,
