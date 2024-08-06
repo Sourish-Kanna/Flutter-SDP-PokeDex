@@ -142,16 +142,16 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children:[
                             SizedBox(
-                               width: width * 0.3,
-                                 child: const Text("Name", style: TextStyle(
-                                     color: Colors.blueGrey, fontSize: 18,
-                                     fontWeight: FontWeight.bold
-                                 ),),
-                             ),
+                              width: width * 0.3,
+                              child: const Text("Name", style: TextStyle(
+                                  color: Colors.blueGrey, fontSize: 18,
+                                  fontWeight: FontWeight.bold
+                              ),),
+                            ),
                             Text(name, style: const TextStyle(
                                 color: Colors.black, fontSize: 18
                             ),),
-                           ],
+                          ],
                         ),
                       ),
 
@@ -248,60 +248,60 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children:[
-                          Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                          children:[
-                            SizedBox(
-                              width: width/5,
-                              child: const Text("HP", style: TextStyle(
-                                color: Colors.blueGrey, fontSize: 18,
-                                  fontWeight: FontWeight.bold
-                              ),),),
-                            SizedBox(
-                              width: width/5,
-                              child: const Text("Attack", style: TextStyle(
-                                  color: Colors.blueGrey, fontSize: 18,
-                                  fontWeight: FontWeight.bold
-                              ),),),
-                            SizedBox(
-                              width: width/5,
-                              child: const Text("Defense", style: TextStyle(
-                                  color: Colors.blueGrey, fontSize: 18,
-                                  fontWeight: FontWeight.bold
-                              ),),),
-                            SizedBox(
-                              width: width/5,
-                              child: const Text("Speed", style: TextStyle(
-                                  color: Colors.blueGrey, fontSize: 18,
-                                  fontWeight: FontWeight.bold
-                              ),),),
-                          ],),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children:[
-                              SizedBox(
-                                width: width/5,
-                                child: Text(hp, style: const TextStyle(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children:[
+                                SizedBox(
+                                  width: width/5,
+                                  child: const Text("HP", style: TextStyle(
+                                      color: Colors.blueGrey, fontSize: 18,
+                                      fontWeight: FontWeight.bold
+                                  ),),),
+                                SizedBox(
+                                  width: width/5,
+                                  child: const Text("Attack", style: TextStyle(
+                                      color: Colors.blueGrey, fontSize: 18,
+                                      fontWeight: FontWeight.bold
+                                  ),),),
+                                SizedBox(
+                                  width: width/5,
+                                  child: const Text("Defense", style: TextStyle(
+                                      color: Colors.blueGrey, fontSize: 18,
+                                      fontWeight: FontWeight.bold
+                                  ),),),
+                                SizedBox(
+                                  width: width/5,
+                                  child: const Text("Speed", style: TextStyle(
+                                      color: Colors.blueGrey, fontSize: 18,
+                                      fontWeight: FontWeight.bold
+                                  ),),),
+                              ],),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children:[
+                                SizedBox(
+                                  width: width/5,
+                                  child: Text(hp, style: const TextStyle(
                                     color: Colors.black, fontSize: 18,
-                                ),),),
-                              SizedBox(
-                                width: width/5,
-                                child: Text(attack, style: const TextStyle(
-                                  color: Colors.black, fontSize: 18,
-                                ),),),
-                              SizedBox(
-                                width: width/5,
-                                child: Text(defence, style: const TextStyle(
-                                  color: Colors.black, fontSize: 18,
-                                ),),),
-                              SizedBox(
-                                width: width/5,
-                                child: Text(speed, style: const TextStyle(
-                                  color: Colors.black, fontSize: 18,
-                                ),),),
-                            ],),
+                                  ),),),
+                                SizedBox(
+                                  width: width/5,
+                                  child: Text(attack, style: const TextStyle(
+                                    color: Colors.black, fontSize: 18,
+                                  ),),),
+                                SizedBox(
+                                  width: width/5,
+                                  child: Text(defence, style: const TextStyle(
+                                    color: Colors.black, fontSize: 18,
+                                  ),),),
+                                SizedBox(
+                                  width: width/5,
+                                  child: Text(speed, style: const TextStyle(
+                                    color: Colors.black, fontSize: 18,
+                                  ),),),
+                              ],),
                           ],
                         ),
                       ),
