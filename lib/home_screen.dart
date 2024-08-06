@@ -76,25 +76,38 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   flex: 1,
-                  child: ElevatedButton(
+                  child: IconButton(
                     onPressed: _performSearch,
-                    child: const Icon(Icons.search,
-                      color: Colors.blue,),
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty. resolveWith<Color?>(
+                            (Set<WidgetState> states) {
+                            return Theme.of(context).colorScheme.primary;
+                        },
+                      ),
+                    ),
+                    icon: Icon(Icons.search,color: Theme.of(context).colorScheme.surface,),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   flex: 1,
-                  child: ElevatedButton(
+                  child: IconButton(
                     onPressed: () async {
                       Widget detailScreen = await randomPokemon();
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => detailScreen),
                       );
+
                     },
-                    child: const Icon(Icons.explore_outlined,
-                      color: Colors.blue,),
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty. resolveWith<Color?>(
+                            (Set<WidgetState> states) {
+                          return Theme.of(context).colorScheme.primary;
+                        },
+                      ),
+                    ),
+                    icon: Icon(Icons.explore_outlined,color: Theme.of(context).colorScheme.surface,),
                   ),
                 )
               ],
@@ -102,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Positioned(
             top: 215,
-            bottom: 0,
+            bottom: 5,
             width: width,
             child: Scrollbar(
               trackVisibility: true,
