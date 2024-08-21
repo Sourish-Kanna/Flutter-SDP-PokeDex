@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pokemon/home_screen.dart';
+import 'package:PokeDex_Flutter/home_screen.dart';
 import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome;
 
 

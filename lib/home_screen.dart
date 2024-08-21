@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:pokemon/pokemon_detail_screen.dart';
+import 'package:PokeDex_Flutter/pokemon_detail_screen.dart';
 import 'package:pokedex/pokedex.dart';
 import 'package:string_capitalize/string_capitalize.dart';
 
@@ -36,10 +36,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: [
           Positioned(
-            top: -50,
-            right: -150,
+            top: -65,
+            right: -70,
             child: Image.asset(
-              'images/pokeball.png', width: 400, fit: BoxFit.fitWidth,),
+              'images/pokeball.png', height: 250, fit: BoxFit.fitWidth,),
           ),
           const Positioned(
               top: 80,
@@ -298,11 +298,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Stack(
                 children: [
                   Positioned(
-                      bottom: -5,
-                      right: -45,
+                      top: 10,
+                      right: -15,
                       child: Image.asset(
                           'images/pokeball.png',
-                          height: 100,
+                          height: 115,
                           fit: BoxFit.fitHeight)
                   ),
                   Positioned(

@@ -47,8 +47,8 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
         alignment: Alignment.center,
         children: [
           Positioned(
-            top: height * 0.15,
-            left: -45,
+            top: height * 0.16,
+            left: width*0.17,
             child: Image.asset(
               "images/pokeball.png",
               height: 275,
