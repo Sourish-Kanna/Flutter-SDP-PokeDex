@@ -60,5 +60,20 @@ The app doesn’t store sensitive user data and works directly with the **PokéA
 
 ---
 
-## License:
+## Screenshots
+
+<table>
+    <tr>
+        <td><img src="https://github.com/user-attachments/assets/6325badc-457a-44b9-9fea-0d5c26bc7e4a" alt="Screenshot_20250124_101503" width="100%"></td>
+        <td><img src="https://github.com/user-attachments/assets/31e9a4ec-fe18-4b8c-8e80-e26bca3cdcd9" alt="Screenshot_20250124_101441" width="100%"></td>
+    </tr>
+    <tr>
+        <td><img src="https://github.com/user-attachments/assets/60604aca-f35e-4817-a377-52988952d193" alt="Screenshot_20250124_101423" width="100%"></td>
+    </tr>
+</table>
+
+---
+
+## License
+
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
