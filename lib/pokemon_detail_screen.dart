@@ -18,6 +18,7 @@ class PokemonDetailScreen extends StatefulWidget {
 class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   @override
   Widget build(BuildContext context) {
+    //specify the dimensions 
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
     var pokemon = widget.pokemonDetail;
