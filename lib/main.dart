@@ -16,6 +16,7 @@ class Pokedex extends StatelessWidget{
   const Pokedex({super.key});
 
   @override
+  //widget specifications mentioned
   Widget build(BuildContext context){
       return const MaterialApp(
         home: HomeScreen(),
