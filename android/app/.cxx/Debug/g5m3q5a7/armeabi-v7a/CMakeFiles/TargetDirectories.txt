@@ -1,2 +1,0 @@
-C:/Users/souri/Documents/College Study/Semester 5/App Dev/Flutter-SDP-PokeDex/android/app/.cxx/Debug/g5m3q5a7/armeabi-v7a/CMakeFiles/edit_cache.dir
-C:/Users/souri/Documents/College Study/Semester 5/App Dev/Flutter-SDP-PokeDex/android/app/.cxx/Debug/g5m3q5a7/armeabi-v7a/CMakeFiles/rebuild_cache.dir
