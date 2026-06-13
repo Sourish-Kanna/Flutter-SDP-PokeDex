@@ -1,5 +1,9 @@
 # PokeDex Flutter Application
 
+![Flutter](https://img.shields.io/badge/Flutter-3.x-blue)
+![Release](https://img.shields.io/github/v/release/Sourish-Kanna/Flutter-SDP-PokeDex)
+![License](https://img.shields.io/github/license/Sourish-Kanna/Flutter-SDP-PokeDex)
+
 ## Developed as part of the **Skill Development Program** in college
 
 A **PokeDex** application built using **Flutter** that allows users to explore detailed information about various Pokémon. The app uses the **PokéAPI**, a RESTful API, to retrieve and display data in an interactive and engaging way.
