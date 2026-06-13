@@ -22,7 +22,6 @@ class PokemonDetailScreenState extends State<PokemonDetailScreen> {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
 
-    // Checks dynamic background luminance to decide between black or white header text
     Color headerTextColor = widget.color.computeLuminance() > 0.6
         ? Colors.black87
         : Colors.white;
@@ -99,51 +98,62 @@ class PokemonDetailScreenState extends State<PokemonDetailScreen> {
               color: Colors.white.withOpacity(0.12),
             ),
           ),
-          Positioned(
-            top: 30,
-            left: 5,
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: headerTextColor, size: 30),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ),
-          Positioned(
-            top: 90,
-            left: 20,
-            child: Text(
-              name,
-              style: TextStyle(
-                color: headerTextColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 30,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 140,
-            left: 20,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: Colors.black12,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 8.0,
-                  right: 8.0,
-                  top: 4.0,
-                  bottom: 4.0,
-                ),
-                child: Text(
-                  type,
-                  style: TextStyle(
-                    color: headerTextColor,
-                    fontWeight: FontWeight.bold,
+          // Enforces device structural safe zones around control headers and titles
+          SafeArea(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 5,
+                  left: 5,
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.arrow_back,
+                      color: headerTextColor,
+                      size: 30,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
                   ),
                 ),
-              ),
+                Positioned(
+                  top: 55,
+                  left: 20,
+                  child: Text(
+                    name,
+                    style: TextStyle(
+                      color: headerTextColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 105,
+                  left: 20,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                      color: Colors.black12,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        left: 8.0,
+                        right: 8.0,
+                        top: 4.0,
+                        bottom: 4.0,
+                      ),
+                      child: Text(
+                        type,
+                        style: TextStyle(
+                          color: headerTextColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Positioned(
@@ -156,8 +166,7 @@ class PokemonDetailScreenState extends State<PokemonDetailScreen> {
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(20),
                 ),
-                color:
-                    Colors.white, // Strictly locked to white light background
+                color: Colors.white,
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -318,10 +327,7 @@ class PokemonDetailScreenState extends State<PokemonDetailScreen> {
           ),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 16,
-            ), // Locked to black text color
+            style: const TextStyle(color: Colors.black, fontSize: 16),
           ),
         ],
       ),

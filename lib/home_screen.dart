@@ -13,10 +13,10 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   List<dynamic> pokedex = [];
   List<dynamic> filteredPokedex = [];
   bool isLoading = true;
@@ -233,8 +233,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery.of(context).size.width;
-
     return Scaffold(
       backgroundColor: Colors.white,
       floatingActionButton: showScrollFAB
@@ -253,6 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
           : null,
       body: Stack(
         children: [
+          // Background graphic asset placed outside the SafeArea to sit neatly behind cutouts
           Positioned(
             top: -65,
             right: -70,
@@ -262,123 +261,149 @@ class _HomeScreenState extends State<HomeScreen> {
               fit: BoxFit.fitWidth,
             ),
           ),
-          const Positioned(
-            top: 70,
-            left: 20,
-            child: Text(
-              "Pokedex",
-              style: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 140,
-            left: 15,
-            right: 15,
-            child: Row(
+          SafeArea(
+            child: Stack(
               children: [
-                Expanded(
-                  child: SearchAnchor.bar(
-                    searchController: _searchController,
-                    barHintText: 'Search across all generations...',
-                    barElevation: WidgetStateProperty.all(1.0),
-                    barBackgroundColor: WidgetStateProperty.all(Colors.white),
-                    barShape: WidgetStateProperty.all(
-                      const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
-                      ),
+                const Positioned(
+                  top:
+                      20, // Adjusted layout padding constraints inside safe boundaries
+                  left: 20,
+                  child: Text(
+                    "Pokedex",
+                    style: TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
-                    onSubmitted: (String text) {
-                      _searchController.closeView(text);
-                      filterPokemon(text);
-                    },
-                    suggestionsBuilder:
-                        (BuildContext context, SearchController controller) {
-                          final keyword = controller.text.toLowerCase();
-                          final matches = pokedex
-                              .where(
-                                (p) => p['name']
-                                    .toString()
-                                    .toLowerCase()
-                                    .contains(keyword),
-                              )
-                              .toList();
-
-                          final limitedMatches = matches.take(25).toList();
-
-                          return limitedMatches
-                              .map(
-                                (pokemon) => ListTile(
-                                  title: Text(
-                                    pokemon['name'].toString().capitalize(),
-                                    style: const TextStyle(
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  onTap: () {
-                                    controller.closeView(
-                                      pokemon['name'].toString(),
-                                    );
-                                    filterPokemon(pokemon['name'].toString());
-                                  },
-                                ),
-                              )
-                              .toList();
-                        },
                   ),
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: goToRandomPokemon,
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(12),
+                Positioned(
+                  top: 90, // Positioned seamlessly below title text
+                  left: 15,
+                  right: 15,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SearchAnchor.bar(
+                          searchController: _searchController,
+                          barHintText: 'Search across all generations...',
+                          barElevation: WidgetStateProperty.all(1.0),
+                          barBackgroundColor: WidgetStateProperty.all(
+                            Colors.white,
+                          ),
+                          barShape: WidgetStateProperty.all(
+                            const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(20),
+                              ),
+                            ),
+                          ),
+                          onSubmitted: (String text) {
+                            _searchController.closeView(text);
+                            filterPokemon(text);
+                          },
+                          suggestionsBuilder:
+                              (
+                                BuildContext context,
+                                SearchController controller,
+                              ) {
+                                final keyword = controller.text.toLowerCase();
+                                final matches = pokedex
+                                    .where(
+                                      (p) => p['name']
+                                          .toString()
+                                          .toLowerCase()
+                                          .contains(keyword),
+                                    )
+                                    .toList();
+
+                                final limitedMatches = matches
+                                    .take(25)
+                                    .toList();
+
+                                return limitedMatches
+                                    .map(
+                                      (pokemon) => ListTile(
+                                        title: Text(
+                                          pokemon['name']
+                                              .toString()
+                                              .capitalize(),
+                                          style: const TextStyle(
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        onTap: () {
+                                          controller.closeView(
+                                            pokemon['name'].toString(),
+                                          );
+                                          filterPokemon(
+                                            pokemon['name'].toString(),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                    .toList();
+                              },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: goToRandomPokemon,
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.all(12),
+                        ),
+                        icon: const Icon(Icons.explore_outlined),
+                      ),
+                    ],
                   ),
-                  icon: const Icon(Icons.explore_outlined),
+                ),
+                Positioned(
+                  top: 165, // Shifted to match structural layouts safely
+                  bottom: 5,
+                  left: 0,
+                  right: 0,
+                  child: isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.redAccent,
+                          ),
+                        )
+                      : filteredPokedex.isEmpty
+                      ? const Center(
+                          child: Text(
+                            "No Pokémon matches your search.",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        )
+                      : Scrollbar(
+                          controller: _scrollController,
+                          trackVisibility: true,
+                          thickness: 5.0,
+                          child: GridView.builder(
+                            controller: _scrollController,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  childAspectRatio: 1.5,
+                                ),
+                            itemCount: filteredPokedex.length,
+                            itemBuilder: (context, index) {
+                              return PokemonGridCard(
+                                key: ValueKey(filteredPokedex[index]['name']),
+                                pokemonName: filteredPokedex[index]['name'],
+                                getColorByType: getColorByType,
+                              );
+                            },
+                          ),
+                        ),
                 ),
               ],
             ),
-          ),
-          Positioned(
-            top: 215,
-            bottom: 5,
-            width: width,
-            child: isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.redAccent),
-                  )
-                : filteredPokedex.isEmpty
-                ? const Center(
-                    child: Text(
-                      "No Pokémon matches your search.",
-                      style: TextStyle(fontSize: 16, color: Colors.black54),
-                    ),
-                  )
-                : Scrollbar(
-                    controller: _scrollController,
-                    trackVisibility: true,
-                    thickness: 5.0,
-                    child: GridView.builder(
-                      controller: _scrollController,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 1.5,
-                          ),
-                      itemCount: filteredPokedex.length,
-                      itemBuilder: (context, index) {
-                        return PokemonGridCard(
-                          key: ValueKey(filteredPokedex[index]['name']),
-                          pokemonName: filteredPokedex[index]['name'],
-                          getColorByType: getColorByType,
-                        );
-                      },
-                    ),
-                  ),
           ),
         ],
       ),
