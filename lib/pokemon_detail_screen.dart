@@ -1,66 +1,109 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:string_capitalize/string_capitalize.dart';
-import 'package:pokedex/pokedex.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class PokemonDetailScreen extends StatefulWidget {
-  final dynamic pokemonDetail;
+  final Map<String, dynamic> pokemonDetail;
   final Color color;
 
-  const PokemonDetailScreen({super.key, this.pokemonDetail, required this.color});
+  const PokemonDetailScreen({
+    super.key,
+    required this.pokemonDetail,
+    required this.color,
+  });
 
   @override
-  _PokemonDetailScreenState createState() => _PokemonDetailScreenState();
+  PokemonDetailScreenState createState() => PokemonDetailScreenState();
 }
 
-class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
+class PokemonDetailScreenState extends State<PokemonDetailScreen> {
   @override
   Widget build(BuildContext context) {
-    //specify the dimensions 
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
-    var pokemon = widget.pokemonDetail;
-    var Stats = parseJson(prettyJson(pokemon["stats"]));
-    var Moves = parseJson(prettyJson(pokemon["moves"]));
-    var typeNames = pokemon['types'].map((item) => item['type']['name']).toList();
+
+    // Checks dynamic background luminance to decide between black or white header text
+    Color headerTextColor = widget.color.computeLuminance() > 0.6
+        ? Colors.black87
+        : Colors.white;
+
+    final pokemon = widget.pokemonDetail;
+    final List<dynamic> stats = pokemon['stats'];
+    final List<dynamic> moves = pokemon['moves'];
+    final List<dynamic> types = pokemon['types'];
+
+    var typeNames = types.map((item) => item['type']['name']).toList();
+
     String type1 = typeNames.first.toString().capitalize();
-    String type2 = typeNames.last.toString().capitalize();
     String type = typeNames.join(' | ').toString().capitalizeEach();
     String id = pokemon['id'].toString();
     String name = pokemon['name'].toString().capitalize();
     String pokeHeight = "${(pokemon['height'] / 10).toString()} m";
     String pokeWeight = "${(pokemon['weight'] / 10).toString()} Kg";
-    String pokeAbility = "${pokemon["abilities"][0]["ability"]["name"]}".capitalize();
-    String hp = "${Stats[0]["base_stat"]}";
-    String attack = "${Stats[1]["base_stat"]}";
-    String defence = "${Stats[2]["base_stat"]}";
-    String speed = "${Stats[5]["base_stat"]}";
-    String move1 = "${Moves[0]["move"]["name"]}".split("-").join(" ").capitalizeEach();
-    String move2 = "${Moves[1]["move"]["name"]}".split("-").join(" ").capitalizeEach();
-    String move3 = "${Moves[2]["move"]["name"]}".split("-").join(" ").capitalizeEach();
-    String move4 = "${Moves[3]["move"]["name"]}".split("-").join(" ").capitalizeEach();
+
+    final List<dynamic> abilities = pokemon['abilities'];
+    String pokeAbility = (abilities.isNotEmpty)
+        ? abilities.first['ability']['name'].toString().capitalize()
+        : "None";
+
+    String hp = stats[0]['base_stat'].toString();
+    String attack = stats[1]['base_stat'].toString();
+    String defence = stats[2]['base_stat'].toString();
+    String speed = stats[5]['base_stat'].toString();
+
+    String move1 = (moves.isNotEmpty)
+        ? moves[0]['move']['name']
+              .toString()
+              .split("-")
+              .join(" ")
+              .capitalizeEach()
+        : "";
+    String move2 = (moves.length > 1)
+        ? moves[1]['move']['name']
+              .toString()
+              .split("-")
+              .join(" ")
+              .capitalizeEach()
+        : "";
+    String move3 = (moves.length > 2)
+        ? moves[2]['move']['name']
+              .toString()
+              .split("-")
+              .join(" ")
+              .capitalizeEach()
+        : "";
+    String move4 = (moves.length > 3)
+        ? moves[3]['move']['name']
+              .toString()
+              .split("-")
+              .join(" ")
+              .capitalizeEach()
+        : "";
+
+    String? imageUrl =
+        pokemon['sprites']['other']?['official-artwork']?['front_default'] ??
+        pokemon['sprites']['front_default'];
 
     return Scaffold(
-      backgroundColor: getColorByType(type1).withOpacity(0.75),
+      backgroundColor: widget.color,
       body: Stack(
         alignment: Alignment.center,
         children: [
           Positioned(
             top: height * 0.16,
-            left: width*0.17,
+            left: width * 0.17,
             child: Image.asset(
               "images/pokeball.png",
               height: 275,
               fit: BoxFit.fitHeight,
+              color: Colors.white.withOpacity(0.12),
             ),
           ),
           Positioned(
             top: 30,
             left: 5,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
+              icon: Icon(Icons.arrow_back, color: headerTextColor, size: 30),
               onPressed: () {
                 Navigator.pop(context);
               },
@@ -71,8 +114,8 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             left: 20,
             child: Text(
               name,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: headerTextColor,
                 fontWeight: FontWeight.bold,
                 fontSize: 30,
               ),
@@ -84,18 +127,19 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                gradient: LinearGradient(
-                  colors: [getColorByType(type1), getColorByType(type2)],
-                  transform: const GradientRotation(1.0),
-                  stops: const [0.50, 0.50],
-                ),
+                color: Colors.black12,
               ),
               child: Padding(
-                padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 4.0, bottom: 4.0),
+                padding: const EdgeInsets.only(
+                  left: 8.0,
+                  right: 8.0,
+                  top: 4.0,
+                  bottom: 4.0,
+                ),
                 child: Text(
                   type,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: headerTextColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -106,249 +150,130 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             bottom: 0,
             child: Container(
               width: width,
-              height: height * 0.6,
+              height: height * 0.55,
               decoration: const BoxDecoration(
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(20)),
-                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(20),
+                ),
+                color:
+                    Colors.white, // Strictly locked to white light background
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       const SizedBox(height: 40),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            SizedBox(
-                              width: width * 0.3,
-                              child: const Text("ID", style: TextStyle(
-                                  color: Colors.blueGrey, fontSize: 18,
-                                  fontWeight: FontWeight.bold
-                              ),),
-                            ),
-                            Text('#$id', style: const TextStyle(
-                                color: Colors.black, fontSize: 18
-                            ),),
-                          ],
-                        ),
-                      ),
+                      buildDetailRow(width, "ID", '#$id'),
+                      buildDetailRow(width, "Name", name),
+                      buildDetailRow(width, "Height", pokeHeight),
+                      buildDetailRow(width, "Weight", pokeWeight),
+                      buildDetailRow(width, "Ability", pokeAbility),
+                      const SizedBox(height: 20),
 
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            SizedBox(
-                              width: width * 0.3,
-                              child: const Text("Name", style: TextStyle(
-                                  color: Colors.blueGrey, fontSize: 18,
-                                  fontWeight: FontWeight.bold
-                              ),),
-                            ),
-                            Text(name, style: const TextStyle(
-                                color: Colors.black, fontSize: 18
-                            ),),
-                          ],
-                        ),
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            SizedBox(
-                              width: width * 0.3,
-                              child: const Text("Height", style: TextStyle(
-                                  color: Colors.blueGrey, fontSize: 18,
-                                  fontWeight: FontWeight.bold
-                              ),),
-                            ),
-                            Text(pokeHeight, style: const TextStyle(
-                                color: Colors.black, fontSize: 18
-                            ),),
-                          ],
-                        ),
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            SizedBox(
-                              width: width * 0.3,
-                              child: const Text("Weight", style: TextStyle(
-                                  color: Colors.blueGrey, fontSize: 18,
-                                  fontWeight: FontWeight.bold
-                              ),),
-                            ),
-                            Text(pokeWeight, style: const TextStyle(
-                                color: Colors.black, fontSize: 18
-                            ),),
-                          ],
-                        ),
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            SizedBox(
-                              width: width * 0.3,
-                              child: const Text("Ability", style: TextStyle(
-                                  color: Colors.blueGrey, fontSize: 18,
-                                  fontWeight: FontWeight.bold
-                              ),),
-                            ),
-                            Text(pokeAbility, style: const TextStyle(
-                                color: Colors.black, fontSize: 18
-                            ),),
-                          ],
-                        ),
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children:[
-                            SizedBox(
-                              width: width * 0.3,
-                              child: const Text("Evolves",
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: const [
+                              Text(
+                                "HP",
                                 style: TextStyle(
-                                    color: Colors.blueGrey, fontSize: 18,
-                                    fontWeight: FontWeight.bold
-                                ),),
-                            ),
-                            FutureBuilder(
-                              future: getPokemonWidget(pokemon['id']),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.done) {
-                                  if (snapshot.hasData) {
-                                    return snapshot.data!;
-                                  } else {
-                                    return const Center(child: Text("No data found"));
-                                  }
-                                } else {
-                                  return const Center(child: CircularProgressIndicator());
-                                }
-                              },
-                            ),
-                          ],
-                        ),
+                                  color: Colors.blueGrey,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                "Attack",
+                                style: TextStyle(
+                                  color: Colors.blueGrey,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                "Defense",
+                                style: TextStyle(
+                                  color: Colors.blueGrey,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                "Speed",
+                                style: TextStyle(
+                                  color: Colors.blueGrey,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Text(
+                                hp,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                attack,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                defence,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                speed,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 25),
 
-                      Padding(padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children:[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children:[
-                                SizedBox(
-                                  width: width/5,
-                                  child: const Text("HP", style: TextStyle(
-                                      color: Colors.blueGrey, fontSize: 18,
-                                      fontWeight: FontWeight.bold
-                                  ),),),
-                                SizedBox(
-                                  width: width/5,
-                                  child: const Text("Attack", style: TextStyle(
-                                      color: Colors.blueGrey, fontSize: 18,
-                                      fontWeight: FontWeight.bold
-                                  ),),),
-                                SizedBox(
-                                  width: width/5,
-                                  child: const Text("Defense", style: TextStyle(
-                                      color: Colors.blueGrey, fontSize: 18,
-                                      fontWeight: FontWeight.bold
-                                  ),),),
-                                SizedBox(
-                                  width: width/5,
-                                  child: const Text("Speed", style: TextStyle(
-                                      color: Colors.blueGrey, fontSize: 18,
-                                      fontWeight: FontWeight.bold
-                                  ),),),
-                              ],),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children:[
-                                SizedBox(
-                                  width: width/5,
-                                  child: Text(hp, style: const TextStyle(
-                                    color: Colors.black, fontSize: 18,
-                                  ),),),
-                                SizedBox(
-                                  width: width/5,
-                                  child: Text(attack, style: const TextStyle(
-                                    color: Colors.black, fontSize: 18,
-                                  ),),),
-                                SizedBox(
-                                  width: width/5,
-                                  child: Text(defence, style: const TextStyle(
-                                    color: Colors.black, fontSize: 18,
-                                  ),),),
-                                SizedBox(
-                                  width: width/5,
-                                  child: Text(speed, style: const TextStyle(
-                                    color: Colors.black, fontSize: 18,
-                                  ),),),
-                              ],),
-                          ],
-                        ),
+                      Column(
+                        children: [
+                          const Text(
+                            "Featured Moves",
+                            style: TextStyle(
+                              color: Colors.blueGrey,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              if (move1.isNotEmpty) buildMoveBadge(move1),
+                              if (move2.isNotEmpty) buildMoveBadge(move2),
+                              if (move3.isNotEmpty) buildMoveBadge(move3),
+                              if (move4.isNotEmpty) buildMoveBadge(move4),
+                            ],
+                          ),
+                        ],
                       ),
-
-                      Padding(padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children:[
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children:[
-                                Text("Moves", style: TextStyle(
-                                    color: Colors.blueGrey, fontSize: 18,
-                                    fontWeight: FontWeight.bold
-                                ),),
-                              ],),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children:[
-                                SizedBox(
-                                  width: width/5,
-                                  child: Text(move1, style: const TextStyle(
-                                    color: Colors.black, fontSize: 18,
-                                  ),),),
-                                SizedBox(
-                                  width: width/5,
-                                  child: Text(move2, style: const TextStyle(
-                                    color: Colors.black, fontSize: 18,
-                                  ),),),
-                                SizedBox(
-                                  width: width/5,
-                                  child: Text(move3, style: const TextStyle(
-                                    color: Colors.black, fontSize: 18,
-                                  ),),),
-                                SizedBox(
-                                  width: width/5,
-                                  child: Text(move4, style: const TextStyle(
-                                    color: Colors.black, fontSize: 18,
-                                  ),),),
-                              ],),
-                          ],
-                        ),
-                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -356,26 +281,18 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             ),
           ),
           Positioned(
-            top: height * 0.20,
-            left: (width / 2) - 100,
-            child: FutureBuilder<String>(
-              future: fetchImage(id),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasData) {
-                    return CachedNetworkImage(
+            top: height * 0.18,
+            child: Hero(
+              tag: 'pokemon-image-$id',
+              child: (imageUrl != null && imageUrl.isNotEmpty)
+                  ? CachedNetworkImage(
                       height: 200,
-                      imageUrl: snapshot.data!,
-                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                      imageUrl: imageUrl,
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.error, size: 50),
                       fit: BoxFit.fitHeight,
-                    );
-                  } else {
-                    return const Center(child: Text("No image found"));
-                  }
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
+                    )
+                  : const Icon(Icons.help_outline, size: 100),
             ),
           ),
         ],
@@ -383,79 +300,45 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     );
   }
 
-  dynamic parseJson(String jsonString) {
-    return json.decode(jsonString);
+  Widget buildDetailRow(double width, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: width * 0.3,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.blueGrey,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+            ), // Locked to black text color
+          ),
+        ],
+      ),
+    );
   }
 
-  String prettyJson(dynamic json) {
-    const encoder = JsonEncoder.withIndent('  ');
-    return encoder.convert(json);
-  }
-
-  Color getColorByType(String type) {
-    const Map<String, Color> colours = {
-      'normal': Color(0xFFA8A77A),
-      'fire': Color(0xFFEE8130),
-      'water': Color(0xFF6390F0),
-      'electric': Color(0xFFF7D02C),
-      'grass': Color(0xFF7AC74C),
-      'ice': Color(0xFF96D9D6),
-      'fighting': Color(0xFFC22E28),
-      'poison': Color(0xFFA33EA1),
-      'ground': Color(0xFFE2BF65),
-      'flying': Color(0xFFA98FF3),
-      'psychic': Color(0xFFF95587),
-      'bug': Color(0xFFA6B91A),
-      'rock': Color(0xFFB6A136),
-      'ghost': Color(0xFF735797),
-      'dragon': Color(0xFF6F35FC),
-      'dark': Color(0xFF705746),
-      'steel': Color(0xFFB7B7CE),
-      'fairy': Color(0xFFD685AD),
-    };
-
-    return colours[type.toLowerCase()] ?? Colors.grey;
-  }
-
-  Future<String> fetchImage(String id) async {
-    String url = 'https://pokeapi.co/api/v2/pokemon/$id';
-    http.Response response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      return parseJson(response.body)['sprites']['other']['official-artwork']['front_default'].toString();
-    } else {
-      return response.statusCode.toString();
-    }
-  }
-
-  Future<dynamic> fetchPokemonEvolution(int index) async {
-    var response = await Pokedex().evolutionChains.get(index);
-    return response;
-  }
-
-  Future<dynamic> fetchPokemonDetail(int index) async {
-    var response = await Pokedex().pokemon.get(id: index);
-    return response;
-  }
-
-  Future<Widget> getPokemonWidget(int index) async {
-    var pokemonEvoData = await fetchPokemonEvolution(index);
-    var pokemon = parseJson(prettyJson(pokemonEvoData));
-    String newPoke = pokemon['chain']['evolves_to'].first['species']['url'].toString().split('/').reversed.elementAt(1);
-    var pokemonData = await fetchPokemonDetail(int.parse(newPoke));
-    return buildPokemonWidget(pokemonEvoData,pokemonData);
-  }
-
-  Widget buildPokemonWidget(dynamic pokemonEvoData, dynamic pokemonData) {
-    var pokemon = parseJson(prettyJson(pokemonEvoData));
-    var pokemon1 = parseJson(prettyJson(pokemonData));
-    // print(prettyJson(pokemon));
-    String id = (pokemon1['id']).toString();
-    String pokeName = "#$id ${pokemon['chain']['evolves_to'].first['species']['name'].toString().capitalize()}";
-
-    return Text(
-      pokeName,
-      style: const TextStyle(color: Colors.black, fontSize: 18),
+  Widget buildMoveBadge(String moveName) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Text(
+        moveName,
+        style: const TextStyle(fontSize: 14, color: Colors.black87),
+      ),
     );
   }
 }

@@ -1,11 +1,12 @@
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
+
+import 'package:PokeDex_Flutter/pokemon_detail_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:PokeDex_Flutter/pokemon_detail_screen.dart';
-import 'package:pokedex/pokedex.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:string_capitalize/string_capitalize.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,201 +18,191 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> pokedex = [];
-  String searchQuery = '';
   List<dynamic> filteredPokedex = [];
-  final TextEditingController _searchController = TextEditingController();
+  bool isLoading = true;
+  bool showScrollFAB = false;
+  bool isNearBottom = false;
+
+  final SearchController _searchController = SearchController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    if (mounted) {
-      fetchPokemonData();
-    }
+
+    _searchController.addListener(() {
+      if (_searchController.text.isEmpty) {
+        setState(() {
+          filteredPokedex = pokedex;
+        });
+      }
+    });
+
+    _scrollController.addListener(() {
+      if (_scrollController.hasClients) {
+        double offset = _scrollController.offset;
+        double maxScroll = _scrollController.position.maxScrollExtent;
+
+        bool shouldShow = offset > 300;
+        bool nearBottom = offset > (maxScroll / 2);
+
+        if (shouldShow != showScrollFAB || nearBottom != isNearBottom) {
+          setState(() {
+            showScrollFAB = shouldShow;
+            isNearBottom = nearBottom;
+          });
+        }
+      }
+    });
+
+    fetchPokemonData();
   }
 
   @override
-  Widget build(BuildContext context) {
-    var width = MediaQuery.of(context).size.width;
-    return Scaffold(
-      body: Stack(
-        children: [
-          Positioned(
-            top: -65,
-            right: -70,
-            child: Image.asset(
-              'images/pokeball.png', height: 250, fit: BoxFit.fitWidth,),
-          ),
-          const Positioned(
-              top: 80,
-              left: 20,
-              child: Text("Pokedex",
-                style: TextStyle(fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black),)
-          ),
-          Positioned(
-            top: 150,
-            left: 10,
-            right: 5,
-            child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: TextField(
-                    controller: _searchController,
-                    onSubmitted: (query) {
-                      _performSearch();
-                    },
-                    decoration: const InputDecoration(
-                      labelText: 'Pokémon Name/Id',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
-                      ),
-                      // prefixIcon: Icon(Icons.search),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 1,
-                  child: IconButton(
-                    onPressed: _performSearch,
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty. resolveWith<Color?>(
-                            (Set<WidgetState> states) {
-                            return Theme.of(context).colorScheme.primary;
-                        },
-                      ),
-                    ),
-                    icon: Icon(Icons.search,color: Theme.of(context).colorScheme.surface,),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 1,
-                  child: IconButton(
-                    onPressed: () async {
-                      Widget detailScreen = await randomPokemon();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => detailScreen),
-                      );
-
-                    },
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty. resolveWith<Color?>(
-                            (Set<WidgetState> states) {
-                          return Theme.of(context).colorScheme.primary;
-                        },
-                      ),
-                    ),
-                    icon: Icon(Icons.explore_outlined,color: Theme.of(context).colorScheme.surface,),
-                  ),
-                )
-              ],
-            )),
-          ),
-          Positioned(
-            top: 215,
-            bottom: 5,
-            width: width,
-            child: Scrollbar(
-              trackVisibility: true,
-              thickness: 5.0,
-              child: Column(
-                children: [
-                  Expanded(
-                      child: GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 1.6,
-                        ),
-                        itemCount: filteredPokedex.length,
-                        itemBuilder: (context, index) {
-                          return FutureBuilder(
-                            future: getPokemonWidget(index),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.done) {
-                                return snapshot.data!;
-                              } else {
-                                return const Center(child: CircularProgressIndicator());
-                              }
-                            },
-                          );
-                        },
-                      )
-                  )
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
-  void fetchPokemonData() {
-      Pokedex().pokemon.getAll().then((response) {
+  void handleScrollAction() {
+    if (_scrollController.hasClients) {
+      if (isNearBottom) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOutCubic,
+        );
+      } else {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOutCubic,
+        );
+      }
+    }
+  }
+
+  Future<void> fetchPokemonData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? cachedData = prefs.getString('pokedex_cache_all_gens');
+
+      if (cachedData != null) {
+        final List<dynamic> decodedCache = json.decode(cachedData);
         setState(() {
-          pokedex = response.results;
+          pokedex = decodedCache;
           filteredPokedex = pokedex;
+          isLoading = false;
         });
+
+        _backgroundFetchFreshData(prefs);
+        return;
+      }
+
+      final url = Uri.parse('https://pokeapi.co/api/v2/pokemon?limit=2000');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final List<dynamic> results = data['results'];
+
+        await prefs.setString('pokedex_cache_all_gens', json.encode(results));
+
+        setState(() {
+          pokedex = results;
+          filteredPokedex = results;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load data from server');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Failed to load global Pokédex data. Using offline storage if available.",
+            ),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
-  void _performSearch() {
-    FocusScope.of(context).unfocus();
-    final query = _searchController.text;
-    filterPokemon(query); // Replace this with your actual search function
-  }
-
-  bool isInteger(String str) {
-    return int.tryParse(str) != null;
-  }
-
-  List<int> findNumbersContainingDigit(List<int> numbers, int digit) {
-    return numbers.where((number) => number.toString().contains(digit.toString())).toList();
+  Future<void> _backgroundFetchFreshData(SharedPreferences prefs) async {
+    try {
+      final url = Uri.parse('https://pokeapi.co/api/v2/pokemon?limit=2000');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final List<dynamic> results = data['results'];
+        await prefs.setString('pokedex_cache_all_gens', json.encode(results));
+      }
+    } catch (_) {}
   }
 
   void filterPokemon(String query) {
     setState(() {
-      searchQuery = query;
-
       if (query.isEmpty) {
         filteredPokedex = pokedex;
-      } else if (isInteger(query)) {
-        // Parse the query to integer
-        int id = int.parse(query);
-
-        // Create a list of indices to search in the pokedex
-        List<int> indicesWithDigit = findNumbersContainingDigit(
-            List.generate(pokedex.length, (index) => index + 1),
-            id
-        );
-
-        // Filter pokedex using the indices
-        filteredPokedex = pokedex.where((pokemon) =>
-            indicesWithDigit.contains(pokedex.indexOf(pokemon) + 1)
-        ).toList();
-
       } else {
-        // Filter by name if query is not an integer
-        filteredPokedex = pokedex.where((pokemon) =>
-            pokemon.name.toLowerCase().contains(query.toLowerCase())
-        ).toList();
+        filteredPokedex = pokedex
+            .where(
+              (pokemon) => pokemon['name'].toString().toLowerCase().contains(
+                query.toLowerCase(),
+              ),
+            )
+            .toList();
       }
     });
   }
 
-  String prettyJson(dynamic json) {
-    const encoder = JsonEncoder.withIndent('  ');
-    return encoder.convert(json);
-  }
+  Future<void> goToRandomPokemon() async {
+    if (pokedex.isEmpty) return;
 
-  dynamic parseJson(String jsonString) {
-    return json.decode(jsonString);
+    try {
+      Random random = Random();
+      int randomInt = random.nextInt(pokedex.length);
+      String pokemonName = pokedex[randomInt]['name'];
+
+      final url = Uri.parse('https://pokeapi.co/api/v2/pokemon/$pokemonName');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> pokemonDetail = json.decode(response.body);
+        final List<dynamic> types = pokemonDetail['types'];
+        String type1 = types.first['type']['name'].toString();
+
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PokemonDetailScreen(
+                pokemonDetail: pokemonDetail,
+                color: getColorByType(type1),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Error fetching random Pokémon details"),
+          ),
+        );
+      }
+    }
   }
 
   Color getColorByType(String type) {
@@ -234,136 +225,287 @@ class _HomeScreenState extends State<HomeScreen> {
       'dark': Color(0xFF705746),
       'steel': Color(0xFFB7B7CE),
       'fairy': Color(0xFFD685AD),
+      'stellar': Color(0xFF7CC7B2),
+      'unknown': Color(0xFF68A090),
     };
-
-    Color typeColour = colours[type.toLowerCase()]?? Colors.grey;
-    return typeColour;
+    return colours[type.toLowerCase()] ?? Colors.grey;
   }
 
-  Future<String> fetchImage( String id) async {
-    String url = 'https://pokeapi.co/api/v2/pokemon/$id';
-    // Make GET request
-    http.Response response = await http.get(Uri.parse(url));
+  @override
+  Widget build(BuildContext context) {
+    var width = MediaQuery.of(context).size.width;
 
-    // Check if the request was successful
-    if (response.statusCode == 200) {
-      // Successful response
-      return(parseJson(response.body)['sprites']['other']['official-artwork']['front_default'].toString());
-    } else {
-      return(response.statusCode.toString());
-    }
-  }
+    return Scaffold(
+      backgroundColor: Colors.white,
+      floatingActionButton: showScrollFAB
+          ? FloatingActionButton(
+              onPressed: handleScrollAction,
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 4.0,
+              tooltip: isNearBottom ? 'Scroll to top' : 'Scroll to bottom',
+              child: Icon(
+                isNearBottom
+                    ? Icons.arrow_upward_rounded
+                    : Icons.arrow_downward_rounded,
+              ),
+            )
+          : null,
+      body: Stack(
+        children: [
+          Positioned(
+            top: -65,
+            right: -70,
+            child: Image.asset(
+              'images/pokeball.png',
+              height: 250,
+              fit: BoxFit.fitWidth,
+            ),
+          ),
+          const Positioned(
+            top: 70,
+            left: 20,
+            child: Text(
+              "Pokedex",
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 140,
+            left: 15,
+            right: 15,
+            child: Row(
+              children: [
+                Expanded(
+                  child: SearchAnchor.bar(
+                    searchController: _searchController,
+                    barHintText: 'Search across all generations...',
+                    barElevation: WidgetStateProperty.all(1.0),
+                    barBackgroundColor: WidgetStateProperty.all(Colors.white),
+                    barShape: WidgetStateProperty.all(
+                      const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                      ),
+                    ),
+                    onSubmitted: (String text) {
+                      _searchController.closeView(text);
+                      filterPokemon(text);
+                    },
+                    suggestionsBuilder:
+                        (BuildContext context, SearchController controller) {
+                          final keyword = controller.text.toLowerCase();
+                          final matches = pokedex
+                              .where(
+                                (p) => p['name']
+                                    .toString()
+                                    .toLowerCase()
+                                    .contains(keyword),
+                              )
+                              .toList();
 
-  Future<Widget> randomPokemon() async {
-    Random random = Random();
-    int randomInt = random.nextInt(pokedex.length);
-    var pokemonData = await fetchPokemonDetail(pokedex[randomInt].name);
-    var pokemon = parseJson(prettyJson(pokemonData));
-    String type = pokemon['types'].map((item) => item['type']['name'])
-        .toList().join('\n').toString().capitalizeEach();
-    return PokemonDetailScreen(
-      pokemonDetail: pokemon,
-      color: getColorByType(type),
+                          final limitedMatches = matches.take(25).toList();
+
+                          return limitedMatches
+                              .map(
+                                (pokemon) => ListTile(
+                                  title: Text(
+                                    pokemon['name'].toString().capitalize(),
+                                    style: const TextStyle(
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    controller.closeView(
+                                      pokemon['name'].toString(),
+                                    );
+                                    filterPokemon(pokemon['name'].toString());
+                                  },
+                                ),
+                              )
+                              .toList();
+                        },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: goToRandomPokemon,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(12),
+                  ),
+                  icon: const Icon(Icons.explore_outlined),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 215,
+            bottom: 5,
+            width: width,
+            child: isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.redAccent),
+                  )
+                : filteredPokedex.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No Pokémon matches your search.",
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
+                  )
+                : Scrollbar(
+                    controller: _scrollController,
+                    trackVisibility: true,
+                    thickness: 5.0,
+                    child: GridView.builder(
+                      controller: _scrollController,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 1.5,
+                          ),
+                      itemCount: filteredPokedex.length,
+                      itemBuilder: (context, index) {
+                        return PokemonGridCard(
+                          key: ValueKey(filteredPokedex[index]['name']),
+                          pokemonName: filteredPokedex[index]['name'],
+                          getColorByType: getColorByType,
+                        );
+                      },
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
+}
 
-  Future<dynamic> fetchPokemonDetail(String name) async {
-    var response = await Pokedex().pokemon.get(name: name);
-    return response;
+class PokemonGridCard extends StatefulWidget {
+  final String pokemonName;
+  final Color Function(String) getColorByType;
+
+  const PokemonGridCard({
+    super.key,
+    required this.pokemonName,
+    required this.getColorByType,
+  });
+
+  @override
+  State<PokemonGridCard> createState() => _PokemonGridCardState();
+}
+
+class _PokemonGridCardState extends State<PokemonGridCard> {
+  Future<Map<String, dynamic>>? _detailFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _detailFuture = _fetchDetail();
   }
 
-  Future<Widget> getPokemonWidget(int index) async {
-    var pokemonData = await fetchPokemonDetail(filteredPokedex[index].name);
-    return buildPokemonWidget(pokemonData);
+  Future<Map<String, dynamic>> _fetchDetail() async {
+    final url = Uri.parse(
+      'https://pokeapi.co/api/v2/pokemon/${widget.pokemonName}',
+    );
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    }
+    throw Exception('Failed to load detail');
   }
 
-  Widget buildPokemonWidget(dynamic pokemonData) {
-    // Extract necessary data from pokemonData and return the Widget
-    var pokemon = parseJson(prettyJson(pokemonData));
-    var typeNames = pokemon['types'].map((item) => item['type']['name']).toList();
-    String type1 = typeNames.first.toString().capitalize();
-    String type2 = typeNames.last.toString().capitalize();
-    String type = typeNames.join('\n').toString().capitalizeEach();
-    String id = pokemon['id'].toString();
-    String pokeName = "#$id ${pokemon['name'].toString().capitalize()}";
-    return InkWell(
-        child: Padding(
-            padding: const EdgeInsets.symmetric(
-                vertical: 8.0, horizontal: 12),
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _detailFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done ||
+            !snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.redAccent),
+          );
+        }
+
+        final pokemon = snapshot.data!;
+        final List<dynamic> types = pokemon['types'];
+
+        var typeNames = types.map((item) => item['type']['name']).toList();
+        String type1 = typeNames.first.toString().capitalize();
+        String type = typeNames.join('\n').toString().capitalizeEach();
+        String id = pokemon['id'].toString();
+        String pokeName = "#$id ${pokemon['name'].toString().capitalize()}";
+
+        String? imageUrl =
+            pokemon['sprites']?['other']?['official-artwork']?['front_default'] ??
+            pokemon['sprites']?['front_default'];
+
+        return InkWell(
+          onTap: () {
+            FocusScope.of(context).unfocus();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PokemonDetailScreen(
+                  pokemonDetail: pokemon,
+                  color: widget.getColorByType(type1),
+                ),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10),
             child: Container(
               decoration: BoxDecoration(
-                color: getColorByType(type1).withOpacity(0.85),
+                color: widget.getColorByType(type1).withOpacity(0.85),
                 borderRadius: const BorderRadius.all(Radius.circular(20)),
               ),
               child: Stack(
                 children: [
                   Positioned(
-                      top: 10,
-                      right: -15,
-                      child: Image.asset(
-                          'images/pokeball.png',
-                          height: 115,
-                          fit: BoxFit.fitHeight)
-                  ),
-                  Positioned(
-                      bottom: 0,
-                      right: 0,
-                      // child: Hero(
-                      //   tag: int.parse(id),
-                      //     child: FutureBuilder<String>(
-                      //       future: fetchImage(id),
-                      //       builder: (context, snapshot) {
-                      //         if (snapshot.connectionState == ConnectionState.done) {
-                      //           return CachedNetworkImage(
-                      //             height: 110,
-                      //             imageUrl: snapshot.data!,
-                      //             errorWidget: (context, url, error) =>
-                      //                 Icon(Icons.error),
-                      //             fit: BoxFit.fitHeight,
-                      //           );
-                      //         } else {
-                      //           return Center(child: CircularProgressIndicator());
-                      //         }
-                      //       },
-                      //     )
-                      // ),
-                    child: FutureBuilder<String>(
-                      future: fetchImage(id),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          return CachedNetworkImage(
-                            height: 90,
-                            imageUrl: snapshot.data!,
-                            errorWidget: (context, url, error) =>
-                                const Icon(Icons.error),
-                            fit: BoxFit.fitHeight,
-                          );
-                        } else {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                      },
+                    top: 10,
+                    right: -15,
+                    child: Image.asset(
+                      'images/pokeball.png',
+                      height: 115,
+                      fit: BoxFit.fitHeight,
+                      color: Colors.white.withOpacity(0.12),
                     ),
                   ),
                   Positioned(
-                    top: 50,
+                    bottom: 5,
+                    right: 5,
+                    child: Hero(
+                      tag: 'pokemon-image-$id',
+                      child: (imageUrl != null && imageUrl.isNotEmpty)
+                          ? CachedNetworkImage(
+                              height: 85,
+                              imageUrl: imageUrl,
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.error, color: Colors.white),
+                              fit: BoxFit.fitHeight,
+                            )
+                          : const Icon(
+                              Icons.help_outline,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 45,
                     left: 10,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        gradient: LinearGradient(
-                          colors: [getColorByType(type1), getColorByType(type2)],
-                          transform: const GradientRotation(1.0),
-                          stops: const [0.50,0.50],
-                        ),
-                      ),
-                      child: Padding(
-                        padding: typeNames.length==2 ?
-                        const EdgeInsets.only(left: 5, right: 5, top: 2, bottom: 2) :
-                        const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
-                        child: Text(type,
-                          style: const TextStyle(color: Colors.white,
-                            fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
+                    child: Text(
+                      type,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
                       ),
                     ),
                   ),
@@ -372,17 +514,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     left: 5,
                     child: Container(
                       decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(
-                            Radius.circular(10)),
-                        color: Colors.black12,
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                        color: Colors.black26,
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 4, right: 4,
-                            top: 1, bottom: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         child: Text(
                           pokeName,
                           style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
                             color: Colors.white,
                           ),
                         ),
@@ -391,20 +535,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-            )
-        ),
-        onTap: () {
-          FocusScope.of(context).unfocus();
-          Navigator.push(
-            context, MaterialPageRoute(builder: (_) =>
-            PokemonDetailScreen(
-                pokemonDetail: pokemon,
-                color: getColorByType(type),
-                // heroTag: int.parse(id),
-            )
-            )
-          );
-        }
+            ),
+          ),
+        );
+      },
     );
   }
 }

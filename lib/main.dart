@@ -1,26 +1,26 @@
-import 'package:flutter/material.dart';
 import 'package:PokeDex_Flutter/home_screen.dart';
-import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome;
+import 'package:flutter/material.dart';
 
-
-void main(){
-  WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-  runApp(const Pokedex());
+void main() {
+  runApp(const MyApp());
 }
 
-class Pokedex extends StatelessWidget{
-  const Pokedex({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
-  //widget specifications mentioned
-  Widget build(BuildContext context){
-      return const MaterialApp(
-        home: HomeScreen(),
-        debugShowCheckedModeBanner: false,
-      );
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Pokédex',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        colorSchemeSeed: Colors.redAccent,
+      ),
+      themeMode: ThemeMode
+          .light, // Forces the application to ignore system dark mode completely
+      home: const HomeScreen(),
+    );
   }
 }
