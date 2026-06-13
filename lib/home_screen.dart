@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:PokeDex_Flutter/pokemon_detail_screen.dart';
+import 'package:pokedex_flutter/pokemon_detail_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -25,6 +25,9 @@ class HomeScreenState extends State<HomeScreen> {
 
   final SearchController _searchController = SearchController();
   final ScrollController _scrollController = ScrollController();
+
+  // Debouncer timer to minimize heavy structural text parsing filtering cycles
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -62,6 +65,7 @@ class HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -150,12 +154,9 @@ class HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
   }
 
-  /// Helper method to extract the Pokémon ID string from its PokéAPI URL endpoint
-  /// Example input: "https://pokeapi.co/api/v2/pokemon/25/" -> Output: "25"
   String _extractIdFromUrl(String url) {
     try {
       final segments = Uri.parse(url).pathSegments;
-      // The ID is the second to last segment because of the trailing slash
       return segments[segments.length - 2];
     } catch (_) {
       return '';
@@ -172,11 +173,17 @@ class HomeScreenState extends State<HomeScreen> {
         filteredPokedex = pokedex.where((pokemon) {
           final name = pokemon['name'].toString().toLowerCase();
           final id = _extractIdFromUrl(pokemon['url'].toString());
-
-          // Matches if the name contains the search term OR if the ID matches exactly
           return name.contains(cleanQuery) || id == cleanQuery;
         }).toList();
       }
+    });
+  }
+
+  // Debounce controller to limit rebuilding states on rapid typists
+  void _onSearchTextChanged(String text) {
+    if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 250), () {
+      filterPokemon(text);
     });
   }
 
@@ -310,9 +317,7 @@ class HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
-                          onChanged: (String text) {
-                            filterPokemon(text);
-                          },
+                          onChanged: _onSearchTextChanged,
                           onSubmitted: (String text) {
                             _searchController.closeView(text);
                             filterPokemon(text);
@@ -326,7 +331,6 @@ class HomeScreenState extends State<HomeScreen> {
                                     .trim()
                                     .toLowerCase();
 
-                                // Updated suggestions filter to evaluate both name matches and precise ID matches
                                 final limitedMatches = pokedex
                                     .where((p) {
                                       final name = p['name']
@@ -354,7 +358,10 @@ class HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                     title: Text(
-                                      pokemon['name'].toString().capitalize(),
+                                      pokemon['name']
+                                          .toString()
+                                          .capitalize()
+                                          .replaceAll('-', ' '),
                                       style: const TextStyle(
                                         color: Colors.black87,
                                       ),
@@ -449,28 +456,62 @@ class PokemonGridCard extends StatefulWidget {
   State<PokemonGridCard> createState() => _PokemonGridCardState();
 }
 
-class _PokemonGridCardState extends State<PokemonGridCard> {
+class _PokemonGridCardState extends State<PokemonGridCard>
+    with SingleTickerProviderStateMixin {
   Future<Map<String, dynamic>>? _detailFuture;
+
+  // Runtime memory caching
   static final Map<String, Map<String, dynamic>> _detailMemoryCache = {};
+
+  // Animation controller for our skeletal shimmer loading boxes
+  late AnimationController _shimmerController;
 
   @override
   void initState() {
     super.initState();
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    )..repeat();
+
     _detailFuture = _fetchDetail();
   }
 
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
   Future<Map<String, dynamic>> _fetchDetail() async {
+    final String cacheKey = 'poke_detail_${widget.pokemonName}';
+
+    // Tier 1: Check runtime memory maps
     if (_detailMemoryCache.containsKey(widget.pokemonName)) {
       return _detailMemoryCache[widget.pokemonName]!;
     }
 
+    // Tier 2: Check persistent disk database storage (SharedPreferences)
+    final prefs = await SharedPreferences.getInstance();
+    final String? localJson = prefs.getString(cacheKey);
+    if (localJson != null) {
+      final data = json.decode(localJson) as Map<String, dynamic>;
+      _detailMemoryCache[widget.pokemonName] = data; // backfill RAM cache
+      return data;
+    }
+
+    // Tier 3: Request fallback from PokeAPI network endpoint
     final url = Uri.parse(
       'https://pokeapi.co/api/v2/pokemon/${widget.pokemonName}',
     );
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = json.decode(response.body) as Map<String, dynamic>;
+
+      // Save locally to make loaded models completely offline-persistent
       _detailMemoryCache[widget.pokemonName] = data;
+      await prefs.setString(cacheKey, json.encode(data));
+
       return data;
     }
     throw Exception('Failed to load detail');
@@ -483,8 +524,27 @@ class _PokemonGridCardState extends State<PokemonGridCard> {
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done ||
             !snapshot.hasData) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.redAccent),
+          // Replaced spinning circular indicator with a modern, smooth skeletal shimmer box layout
+          return AnimatedBuilder(
+            animation: _shimmerController,
+            builder: (context, child) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 6.0,
+                  horizontal: 10,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color.lerp(
+                      Colors.grey[200],
+                      Colors.grey[300],
+                      _shimmerController.value,
+                    ),
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  ),
+                ),
+              );
+            },
           );
         }
 
@@ -494,8 +554,17 @@ class _PokemonGridCardState extends State<PokemonGridCard> {
         var typeNames = types.map((item) => item['type']['name']).toList();
         String type1 = typeNames.first.toString().capitalize();
         String type = typeNames.join('\n').toString().capitalizeEach();
-        String id = pokemon['id'].toString();
-        String pokeName = "#$id ${pokemon['name'].toString().capitalize()}";
+
+        int rawId = pokemon['id'];
+        String idString = rawId.toString();
+
+        // Safe handling formatting constraints for high indexing variant forms (Mega, Hisuian, Gmax variants)
+        String displayName = pokemon['name'].toString().capitalize();
+        if (rawId > 10000) {
+          displayName = displayName.replaceAll('-', ' ');
+        }
+
+        String pokeName = "#$idString $displayName";
 
         String? imageUrl =
             pokemon['sprites']?['other']?['official-artwork']?['front_default'] ??
@@ -518,7 +587,7 @@ class _PokemonGridCardState extends State<PokemonGridCard> {
             padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10),
             child: Container(
               decoration: BoxDecoration(
-                color: widget.getColorByType(type1).withOpacity(0.85),
+                color: widget.getColorByType(type1).withValues(alpha: 0.85),
                 borderRadius: const BorderRadius.all(Radius.circular(20)),
               ),
               child: Stack(
@@ -530,14 +599,14 @@ class _PokemonGridCardState extends State<PokemonGridCard> {
                       'images/pokeball.png',
                       height: 115,
                       fit: BoxFit.fitHeight,
-                      color: Colors.white.withOpacity(0.12),
+                      color: Colors.white.withValues(alpha: 0.12),
                     ),
                   ),
                   Positioned(
                     bottom: 5,
                     right: 5,
                     child: Hero(
-                      tag: 'pokemon-image-$id',
+                      tag: 'pokemon-image-$idString',
                       child: (imageUrl != null && imageUrl.isNotEmpty)
                           ? CachedNetworkImage(
                               height: 85,
@@ -582,7 +651,7 @@ class _PokemonGridCardState extends State<PokemonGridCard> {
                           pokeName,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: 13,
                             color: Colors.white,
                           ),
                         ),

@@ -33,10 +33,13 @@ class PokemonDetailScreenState extends State<PokemonDetailScreen> {
 
     var typeNames = types.map((item) => item['type']['name']).toList();
 
-    String type1 = typeNames.first.toString().capitalize();
+    // String type1 = typeNames.first.toString().capitalize();
     String type = typeNames.join(' | ').toString().capitalizeEach();
-    String id = pokemon['id'].toString();
+    int rawId = pokemon['id'];
     String name = pokemon['name'].toString().capitalize();
+    if (rawId > 10000) {
+      name = name.replaceAll('-', ' ');
+    }
     String pokeHeight = "${(pokemon['height'] / 10).toString()} m";
     String pokeWeight = "${(pokemon['weight'] / 10).toString()} Kg";
 
@@ -95,7 +98,7 @@ class PokemonDetailScreenState extends State<PokemonDetailScreen> {
               "images/pokeball.png",
               height: 275,
               fit: BoxFit.fitHeight,
-              color: Colors.white.withOpacity(0.12),
+              color: Colors.white.withValues(alpha: 0.12),
             ),
           ),
           SafeArea(
@@ -174,7 +177,7 @@ class PokemonDetailScreenState extends State<PokemonDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       const SizedBox(height: 40),
-                      buildDetailRow(width, "ID", '#$id'),
+                      buildDetailRow(width, "ID", '#$rawId'),
                       buildDetailRow(width, "Name", name),
                       buildDetailRow(width, "Height", pokeHeight),
                       buildDetailRow(width, "Weight", pokeWeight),
@@ -291,7 +294,7 @@ class PokemonDetailScreenState extends State<PokemonDetailScreen> {
           Positioned(
             top: height * 0.18,
             child: Hero(
-              tag: 'pokemon-image-$id',
+              tag: 'pokemon-image-$rawId',
               child: (imageUrl != null && imageUrl.isNotEmpty)
                   ? CachedNetworkImage(
                       height: 200,
@@ -336,7 +339,7 @@ class PokemonDetailScreenState extends State<PokemonDetailScreen> {
   Widget buildMoveBadge(String moveName) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.blueGrey.withOpacity(0.12),
+        color: Colors.blueGrey.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

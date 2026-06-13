@@ -1,4 +1,4 @@
-import 'package:PokeDex_Flutter/home_screen.dart';
+import 'package:pokedex_flutter/home_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
