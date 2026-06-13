@@ -98,7 +98,6 @@ class PokemonDetailScreenState extends State<PokemonDetailScreen> {
               color: Colors.white.withOpacity(0.12),
             ),
           ),
-          // Enforces device structural safe zones around control headers and titles
           SafeArea(
             child: Stack(
               children: [

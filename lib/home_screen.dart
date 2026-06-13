@@ -150,18 +150,32 @@ class HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
   }
 
+  /// Helper method to extract the Pokémon ID string from its PokéAPI URL endpoint
+  /// Example input: "https://pokeapi.co/api/v2/pokemon/25/" -> Output: "25"
+  String _extractIdFromUrl(String url) {
+    try {
+      final segments = Uri.parse(url).pathSegments;
+      // The ID is the second to last segment because of the trailing slash
+      return segments[segments.length - 2];
+    } catch (_) {
+      return '';
+    }
+  }
+
   void filterPokemon(String query) {
+    final cleanQuery = query.trim().toLowerCase();
+
     setState(() {
-      if (query.isEmpty) {
+      if (cleanQuery.isEmpty) {
         filteredPokedex = pokedex;
       } else {
-        filteredPokedex = pokedex
-            .where(
-              (pokemon) => pokemon['name'].toString().toLowerCase().contains(
-                query.toLowerCase(),
-              ),
-            )
-            .toList();
+        filteredPokedex = pokedex.where((pokemon) {
+          final name = pokemon['name'].toString().toLowerCase();
+          final id = _extractIdFromUrl(pokemon['url'].toString());
+
+          // Matches if the name contains the search term OR if the ID matches exactly
+          return name.contains(cleanQuery) || id == cleanQuery;
+        }).toList();
       }
     });
   }
@@ -251,7 +265,6 @@ class HomeScreenState extends State<HomeScreen> {
           : null,
       body: Stack(
         children: [
-          // Background graphic asset placed outside the SafeArea to sit neatly behind cutouts
           Positioned(
             top: -65,
             right: -70,
@@ -265,8 +278,7 @@ class HomeScreenState extends State<HomeScreen> {
             child: Stack(
               children: [
                 const Positioned(
-                  top:
-                      20, // Adjusted layout padding constraints inside safe boundaries
+                  top: 20,
                   left: 20,
                   child: Text(
                     "Pokedex",
@@ -278,7 +290,7 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Positioned(
-                  top: 90, // Positioned seamlessly below title text
+                  top: 90,
                   left: 15,
                   right: 15,
                   child: Row(
@@ -286,7 +298,7 @@ class HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: SearchAnchor.bar(
                           searchController: _searchController,
-                          barHintText: 'Search across all generations...',
+                          barHintText: 'Search by name or ID...',
                           barElevation: WidgetStateProperty.all(1.0),
                           barBackgroundColor: WidgetStateProperty.all(
                             Colors.white,
@@ -298,6 +310,9 @@ class HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
+                          onChanged: (String text) {
+                            filterPokemon(text);
+                          },
                           onSubmitted: (String text) {
                             _searchController.closeView(text);
                             filterPokemon(text);
@@ -307,42 +322,51 @@ class HomeScreenState extends State<HomeScreen> {
                                 BuildContext context,
                                 SearchController controller,
                               ) {
-                                final keyword = controller.text.toLowerCase();
-                                final matches = pokedex
-                                    .where(
-                                      (p) => p['name']
-                                          .toString()
-                                          .toLowerCase()
-                                          .contains(keyword),
-                                    )
-                                    .toList();
+                                final keyword = controller.text
+                                    .trim()
+                                    .toLowerCase();
 
-                                final limitedMatches = matches
+                                // Updated suggestions filter to evaluate both name matches and precise ID matches
+                                final limitedMatches = pokedex
+                                    .where((p) {
+                                      final name = p['name']
+                                          .toString()
+                                          .toLowerCase();
+                                      final id = _extractIdFromUrl(
+                                        p['url'].toString(),
+                                      );
+                                      return name.contains(keyword) ||
+                                          id == keyword;
+                                    })
                                     .take(25)
                                     .toList();
 
-                                return limitedMatches
-                                    .map(
-                                      (pokemon) => ListTile(
-                                        title: Text(
-                                          pokemon['name']
-                                              .toString()
-                                              .capitalize(),
-                                          style: const TextStyle(
-                                            color: Colors.black87,
-                                          ),
-                                        ),
-                                        onTap: () {
-                                          controller.closeView(
-                                            pokemon['name'].toString(),
-                                          );
-                                          filterPokemon(
-                                            pokemon['name'].toString(),
-                                          );
-                                        },
+                                return limitedMatches.map((pokemon) {
+                                  final pokeId = _extractIdFromUrl(
+                                    pokemon['url'].toString(),
+                                  );
+                                  return ListTile(
+                                    leading: Text(
+                                      '#$pokeId',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black38,
                                       ),
-                                    )
-                                    .toList();
+                                    ),
+                                    title: Text(
+                                      pokemon['name'].toString().capitalize(),
+                                      style: const TextStyle(
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      controller.closeView(
+                                        pokemon['name'].toString(),
+                                      );
+                                      filterPokemon(pokemon['name'].toString());
+                                    },
+                                  );
+                                }).toList();
                               },
                         ),
                       ),
@@ -360,7 +384,7 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Positioned(
-                  top: 165, // Shifted to match structural layouts safely
+                  top: 165,
                   bottom: 5,
                   left: 0,
                   right: 0,
@@ -427,6 +451,7 @@ class PokemonGridCard extends StatefulWidget {
 
 class _PokemonGridCardState extends State<PokemonGridCard> {
   Future<Map<String, dynamic>>? _detailFuture;
+  static final Map<String, Map<String, dynamic>> _detailMemoryCache = {};
 
   @override
   void initState() {
@@ -435,12 +460,18 @@ class _PokemonGridCardState extends State<PokemonGridCard> {
   }
 
   Future<Map<String, dynamic>> _fetchDetail() async {
+    if (_detailMemoryCache.containsKey(widget.pokemonName)) {
+      return _detailMemoryCache[widget.pokemonName]!;
+    }
+
     final url = Uri.parse(
       'https://pokeapi.co/api/v2/pokemon/${widget.pokemonName}',
     );
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      return json.decode(response.body) as Map<String, dynamic>;
+      final data = json.decode(response.body) as Map<String, dynamic>;
+      _detailMemoryCache[widget.pokemonName] = data;
+      return data;
     }
     throw Exception('Failed to load detail');
   }

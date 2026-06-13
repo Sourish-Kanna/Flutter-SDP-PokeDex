@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         colorSchemeSeed: Colors.redAccent,
       ),
       themeMode: ThemeMode
-          .light, // Forces the application to ignore system dark mode completely
+          .light, // Disregards dark mode hooks entirely to maximize readability
       home: const HomeScreen(),
     );
   }
